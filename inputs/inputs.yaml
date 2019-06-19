@@ -1,0 +1,43 @@
+# For a description of each parameter and their units of measurement, please check the README.md.
+
+exec_params:
+    Update data: True
+    Run algorithm: True
+    Output template: output_algorithm_1_template.xlsx
+    Mode: Analysis
+    Stock list: psi20
+    Format date string: '%d/%m/%Y'
+    Start date: 05/06/2018
+    End date:
+    Last N days:
+    Algorithm name: algorithm_1
+    Filters list: [dataset_size, dataset_old, turnover, price]
+
+backtesting_params:
+    Backtesting print positions: False
+    Only long positions: True
+    Max losses pct: 10
+    Typical trade value: 2000
+    Commission per trade: 5
+
+filter_params:
+    Min turnover: 400000
+    Max price: 2000
+    Min dataset size: 60
+    Max days since update: 15
+    
+algorithm_1_params:
+    Trending indicator: MA5/20
+    Non-trending indicator: STOCH-S
+    Trending threshold: 25
+    STOCH-S Oversold: 20
+    STOCH-S Overbought: 80
+    MT trend TA indicator: MA50
+
+psi20: ['ALTR', 'COR', 'BCP', 'CTT', 'EDP', 'EDPR','RAM', 'GALP', 'IBS','JMT', 'EGL','NOS','PHR','RENE','SEM','SONC','SON','NVG']
+
+cac40: ['AC','Al','AiR','MT','ATO','CS','BNP','EN','CAP','CA','ACA','BN','ENGI','EINV','KER','OR','LHN','LR','MC','ML','ORA','RI','UG','PUBBS','RNO','SAF','SGO','SU','GLE','SW','SOLB','STM','TEC','FP','UL','FR','VIE','DG','VIV']
+
+bel20: ['ACKB','AGS','ABI','APAM','BPOST','COFB','COLR','ENGI','GLPG','GBLB','INGAT','KBC','ONTEX','PROX','SOF','SOLB','TNET','UBC','UMI']
+
+aex: ['AALB','ABN','AGN','AHT','AKZA','ATCT','MT','ASML','BOKA','DSM','GTO','HEIA','INGA','KPN','NN','PHIA','RAND','RELX','RDSBL','SBMO','UL','ULVRL','VPK','WKL']
