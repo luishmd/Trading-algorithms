@@ -1,0 +1,14 @@
+# Directories
+outputs/*/
+
+# Api_file
+quandl_api_key.yaml
+
+# Pickled files
+*.file
+
+# Python compiled files
+*.pyc
+
+# Office Temp Files
+~$
