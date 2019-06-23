@@ -1,5 +1,5 @@
 # Background
-Improve coding skills in python and implement knowledge of finalcial technical indicators to (hopefully) improve finances
+Implement knowledge of financial technical indicators to (hopefully) improve finances :)
 
 
 # Description
@@ -10,7 +10,7 @@ The script implements the following steps:
 2. Read a set of user inputs
 3. Apply filters to stocks, such as no longer traded stocks, stocks with low turnover, etc)
 4. For the subset of stock candidates, run the trading algorithm, defined/selected by the user, which select only appropriate stocks
-5. Write the set of appropriate stcks to an excel file, so that they can be analysed by the user
+5. Write the set of appropriate stocks to an excel file, so that they can be analysed by the user
 
 
 ## Output
