@@ -3,7 +3,8 @@ Library for excel operations using openpyxl
 """
 
 import openpyxl as xl
-from openpyxl.utils import get_column_letter, coordinate_from_string, column_index_from_string
+from openpyxl.utils import get_column_letter, column_index_from_string
+from openpyxl.utils.cell import coordinate_from_string
 
 
 # Metadata
