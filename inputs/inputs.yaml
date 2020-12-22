@@ -7,9 +7,9 @@ exec_params:
     Mode: Analysis
     Stock list: psi20
     Format date string: '%d/%m/%Y'
-    Start date: 05/06/2018
+    Start date:
     End date:
-    Last N days:
+    Last N days: 10
     Algorithm name: algorithm_1
     Filters list: [dataset_size, dataset_old, turnover, price]
 
