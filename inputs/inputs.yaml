@@ -1,7 +1,7 @@
 # For a description of each parameter and their units of measurement, please check the README.md.
 
 exec_params:
-    Update data: True
+    Update data: False
     Run algorithm: True
     Output template: output_algorithm_1_template.xlsx
     Mode: Analysis
@@ -24,7 +24,7 @@ filter_params:
     Min turnover: 400000
     Max price: 2000
     Min dataset size: 60
-    Max days since update: 15
+    Max days since update: 100000000
     
 algorithm_1_params:
     Trending indicator: MA5/20
