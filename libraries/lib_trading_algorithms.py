@@ -30,7 +30,7 @@ from trading_classes import Stock, Algorithm
 #----------------------------------------------------------------------------------------
 def algorithm_1(params_dic, stock_name, stock_database, quandl_code, stock_ds):
 
-    alg = Algorithm(params_dic, stock_name, stock_database, quandl_code, stock_ds)
+    alg = Algorithm(params_dic, stock_name, stock_database)
     ot = alg.ot
     pt_long = alg.pt_long
     pt_short = alg.pt_short

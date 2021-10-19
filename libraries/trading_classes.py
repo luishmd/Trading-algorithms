@@ -130,9 +130,9 @@ class Order(object):
             self.amount = math.floor((money_typical_trade-commission_per_op)/price)
 
     def __str__(self):
-        s = '%s %s | %s - %s | %s | Price: %0.4f EUR/unit' % (str(self.id), self.name, self.position_type, self.order_type, self.date, self.price)
+        s = '%s %s | %s - %s | %s | Price: %0.4f CURR/unit' % (str(self.id), self.name, self.position_type, self.order_type, self.date, self.price)
         if self.stop_loss_price != None:
-            s += ' | Stop: %0.4f EUR/unit' % self.stop_loss_price
+            s += ' | Stop: %0.4f CURR/unit' % self.stop_loss_price
         return s
 
     def get_id(self):
@@ -213,24 +213,25 @@ class Position(object):
     """Creates a position class"""
     def __init__(self, id, stock_obj_entry, ta_indicator_entry, position_type, money_typical_trade, date_obj_entry, price_entry, stop_loss_price, comission_per_op=5):
         self.id = id
+        self.ta_indicator_entry = ta_indicator_entry
         self.stock_obj_entry = stock_obj_entry
         self.name = stock_obj_entry.get_name()
-        self.ta_indicator_entry = ta_indicator_entry
         self.position_type = position_type
         self.stop_loss_price = stop_loss_price
         self.date_entry = date_obj_entry
         self.price_entry = price_entry
-        self.comission_per_op = comission_per_op
+        self.amount = math.floor((money_typical_trade-comission_per_op)/price_entry)
+        self.money_entry = self.amount*self.price_entry + comission_per_op
+
         self.state = 'open'
-        self.amount = math.floor((money_typical_trade-self.comission_per_op)/price_entry)
-        self.money_entry = self.amount*self.price_entry + self.comission_per_op
+        self.comission_per_op = comission_per_op
 
     def __str__(self):
         s = ''
         if self.state == 'open':
-            s += '%s %s | %s | Entry: %s | Price (entry): %0.4f EUR/unit | Stop: %0.4f EUR/unit' % (str(self.id), self.name, self.position_type, self.date_entry, self.price_entry, self.stop_loss_price)
+            s += '%s %s | %s | Entry: %s | Price (entry): %0.4f CURR/unit | Stop: %0.4f CURR/unit' % (str(self.id), self.name, self.position_type, self.date_entry, self.price_entry, self.stop_loss_price)
         if self.state == 'closed':
-            s += '%s %s | %s | Entry: %s | Price (entry): %0.4f EUR/unit | Stop: %0.4f EUR/unit | Exit: %s | Price (exit): %0.4f EUR/unit' % (str(self.id), self.name, self.position_type, self.date_entry, self.price_entry, self.stop_loss_price,self.date_exit, self.price_exit)
+            s += '%s %s | %s | Entry: %s | Price (entry): %0.4f CURR/unit | Stop: %0.4f CURR/unit | Exit: %s | Price (exit): %0.4f CURR/unit' % (str(self.id), self.name, self.position_type, self.date_entry, self.price_entry, self.stop_loss_price,self.date_exit, self.price_exit)
         return s
 
     def get_id(self):
@@ -404,7 +405,7 @@ class Positions_table(object):
 
 class Algorithm(object):
     """Creates an Algorithm class"""
-    def __init__(self, params_dic, stock_name, stock_database, quandl_code, stock_ds):
+    def __init__(self, params_dic, stock_name, stock_ds):
         # For analysis
         self.ot = Orders_table(stock_name)
         self.order_id = 1
@@ -416,24 +417,15 @@ class Algorithm(object):
         self.value_typical_trade = params_dic['Typical trade value']
         self.commission_value = params_dic['Commission per trade']
 
-        self.stock_database = stock_database
-        self.quandl_code = quandl_code
-
         # Calculate start and end days for analysis
         self.start_date_obj = params_dic['Start date']
         self.end_date_obj = params_dic['End date']
         self.last_n_points = params_dic['Last N days']
         if params_dic['Mode'] == 'Analysis':
-            [self.start_date_anal_obj, self.end_date_anal_obj] = lib_general_ops.get_analysis_time_interval(stock_ds['Last'], self.start_date_obj, self.end_date_obj,self.last_n_points)
+            [self.start_date_anal_obj, self.end_date_anal_obj] = lib_general_ops.get_analysis_time_interval(stock_ds, self.start_date_obj, self.end_date_obj,self.last_n_points)
         if params_dic['Mode'] == 'Backtesting':
-            self.start_date_anal_obj = lib_general_ops.get_first_date(stock_ds['Last'])
-            self.end_date_anal_obj = lib_general_ops.get_last_date(stock_ds['Last'])
-
-    def set_stock_database(self, stock_database):
-        self.stock_database = stock_database
-
-    def set_quandl_codee(self, quandl_code):
-        self.quandl_code = quandl_code
+            self.start_date_anal_obj = lib_general_ops.get_first_date(stock_ds)
+            self.end_date_anal_obj = lib_general_ops.get_last_date(stock_ds)
 
     def manage_orders_positions(self, params_dic, stock_obj, ta_indicator, trading_signal_long, trading_signal_short, stock_ds, day):
         if params_dic['Mode'] == 'Analysis':
