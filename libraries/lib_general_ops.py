@@ -20,6 +20,7 @@ __author__ = 'Luis Domingues'
 import sys
 import bisect as bisect
 import datetime
+import pandas as pd
 
 
 
@@ -94,7 +95,7 @@ def get_last_date(dataset):
     :param dataset:
     :return date_obj:
     """
-    return dataset.tail(1).index.to_pydatetime()[0].date()
+    return pd.to_datetime(dataset.tail(1).index).date
 
 
 def get_first_date(dataset):
@@ -103,7 +104,7 @@ def get_first_date(dataset):
     :param dataset:
     :return date_obj:
     """
-    return dataset.head(1).index.to_pydatetime()[0].date()
+    return pd.to_datetime(dataset.head(1).index).date
 
 
 def get_previous_date(dataset, date_obj):
@@ -113,7 +114,7 @@ def get_previous_date(dataset, date_obj):
     :return date_obj:
     """
     try:
-        return dataset[:date_obj].tail(2).index.to_pydatetime()[0].date()
+        return pd.to_datetime(dataset[:date_obj].tail(2).index).date
     except:
         print("Could not find previous day (%s) in dataset.")
         return None

@@ -1,6 +1,5 @@
 __author__ = "Luis Domingues"
-__maintainer__ = "Luis Domingues"
-__email__ = "luis.hmd@gmail.com"
+
 
 #----------------------------------------------------------------------------------------
 # Notes
@@ -18,11 +17,9 @@ import lib_general_ops
 #----------------------------------------------------------------------------------------
 class Stock(object):
     """ Creates a stock object """
-    def __init__(self, name, database_code, dataset):
+    def __init__(self, name, history_ds):
         self.name = name
-        self.database_code = database_code
-        self.quandl_code = database_code + '/' + name
-        self.dataset = dataset
+        self.history_ds = history_ds
 
     def __str__(self):
         return "Stock: %s" % self.name
@@ -30,14 +27,8 @@ class Stock(object):
     def get_name(self):
         return self.name
 
-    def get_database_code(self):
-        return self.database_code
-
     def get_dataset(self):
-        return self.dataset
-
-    def get_quandl_code(self):
-        return self.quandl_code
+        return self.history_ds
 
     def set_trend(self, trend_int):
         """
@@ -412,7 +403,7 @@ class Positions_table(object):
 
 
 class Algorithm(object):
-    """Creates a trades table class"""
+    """Creates an Algorithm class"""
     def __init__(self, params_dic, stock_name, stock_database, quandl_code, stock_ds):
         # For analysis
         self.ot = Orders_table(stock_name)

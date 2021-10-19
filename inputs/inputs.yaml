@@ -5,13 +5,22 @@ exec_params:
     Run algorithm: True
     Output template: output_algorithm_1_template.xlsx
     Mode: Analysis
-    Stock list: psi20
+    Equities list: ["BCP.LS"]
     Format date string: '%d/%m/%Y'
+    Equities DB connection parameters file: YFINANCE_inputs.yaml
     Start date:
     End date:
     Last N days: 10
     Algorithm name: algorithm_1
+    Apply filters: True
     Filters list: [dataset_size, dataset_old, turnover, price]
+
+Equities connection parameters:
+    host: localhost
+    database: EQUITIES
+    user: postgres
+    port: 5432
+    password: remo123
 
 backtesting_params:
     Backtesting print positions: False

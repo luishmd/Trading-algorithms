@@ -9,11 +9,6 @@ from openpyxl.utils.cell import coordinate_from_string
 
 # Metadata
 __author__="Luis Domingues"
-__copyright__ = "Copyright 2017, Process Systems Enterprise, Ltd."
-__version__ = "1.0.0"
-__maintainer__ = "Luis Domingues"
-__email__ = "l.domingues@psenterprise.com"
-__status__ = "Development"
 
 
 #----------------------------------------------------------------------------------------

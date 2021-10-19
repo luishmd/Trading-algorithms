@@ -1,6 +1,5 @@
 __author__ = "Luis Domingues"
-__maintainer__ = "Luis Domingues"
-__email__ = "luis.hmd@gmail.com"
+
 
 #----------------------------------------------------------------------------------------
 # Notes
@@ -24,13 +23,14 @@ import datetime
 # FUNCTIONS
 #----------------------------------------------------------------------------------------
 def turnover(stock_obj, start_date_obj, end_date_obj, params_dic):
-    # turnover values in EUR ( turnover = SUM((Amount_per_transaction * price_transation)
+    # turnover values in Currency ( turnover = SUM((Amount_per_transaction * price_transation)
     stock_ds = stock_obj.get_dataset()
+    stock_ds['Turnover'] = stock_ds['Volume'] * stock_ds['Close']
     analyze_stock = True
     try:
         MA_50_turnover = talib.SMA(stock_ds['Turnover'], 50)
         if str(MA_50_turnover[end_date_obj]).lower() != 'nan':
-            max_turnover = np.nanmax(MA_50_turnover[start_date_obj:end_date_obj])
+            max_turnover = np.nanmax(MA_50_turnover)
             if max_turnover < params_dic['Min turnover']:
                 analyze_stock = False
         else:
