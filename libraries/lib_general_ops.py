@@ -19,7 +19,7 @@ __author__ = 'Luis Domingues'
 #----------------------------------------------------------------------------------------
 import sys
 import bisect as bisect
-import datetime
+import datetime as dt
 import pandas as pd
 
 
@@ -127,29 +127,28 @@ def increment_date(dataset, current_date_obj, n_days=1):
     :return date_obj:
     """
     last_date = get_last_date(dataset)
-    new_date = current_date_obj + datetime.timedelta(days=n_days)
+    new_date = current_date_obj + dt.timedelta(days=n_days)
     test = True
-    while test and last_date - new_date >= datetime.timedelta(days=0):
+    while test and last_date - new_date >= dt.timedelta(days=0):
         try:
             dataset[new_date] # try to access that element in the dataset. If element is not there it will cause a KeyError
             test = False
         except KeyError:
-            new_date = new_date + datetime.timedelta(days=1)
+            new_date = new_date + dt.timedelta(days=1)
     return new_date
 
 
 
-def get_analysis_time_interval(dataset, start_date_obj=None, end_date_obj=None, last_n_points=None):
+def get_analysis_time_interval(dataset, date_format, start_date=None, end_date=None, last_n_points=None):
     try:
-        if start_date_obj==None and last_n_points==None:
-            start_date_obj = get_first_date(dataset)
-        if start_date_obj==None and last_n_points != None:
-            start_date_obj = dataset.tail(last_n_points).index.to_pydatetime()[0].date()
-        if end_date_obj==None:
-            if not check_validity(dataset, start_date_obj):
-                start_date_obj = increment_date(dataset, start_date_obj)
-            end_date_obj = get_last_date(dataset)
-        return [start_date_obj, end_date_obj]
+        [sdate, edate] = get_dataset_time_interval(dataset)
+        if start_date != None:
+            sdate = dt.datetime.strptime(start_date, date_format).date()
+        if end_date != None:
+            edate = dt.datetime.strptime(end_date, date_format).date()
+        if last_n_points != None:
+            sdate = pd.to_datetime(dataset.tail(last_n_points).index).date[0]
+        return [sdate, edate]
     except:
         print("Could not determine time start and end dates.")
         return None
@@ -161,10 +160,10 @@ def get_dataset_time_interval(dataset):
     return [start_date, end_date]
 
 
-def check_validity(dataset, date_obj):
+def check_validity(dataset, date):
     valid = False
     try:
-        dataset[date_obj] # try to access that element in the dataset. If element is not there it will cause a KeyError
+        dataset[date] # try to access that element in the dataset. If element is not there it will cause a KeyError
         valid = True
     except KeyError:
         pass

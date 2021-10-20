@@ -7,13 +7,19 @@ __author__ = "Luis Domingues"
 
 
 #----------------------------------------------------------------------------------------
+# Constants
+#----------------------------------------------------------------------------------------
+date_format = "%Y-%m-%d"
+
+
+#----------------------------------------------------------------------------------------
 # IMPORTS
 #----------------------------------------------------------------------------------------
 import lib_directory_ops
 import lib_file_ops
 import sys
 import lib_general_ops
-import datetime
+import datetime as dt
 import os
 import lib_path_ops
 import lib_trading_algorithms as lib_alg
@@ -25,7 +31,7 @@ import lib_postgresql_ops as lib_pg
 import lib_db_equities as lib_db_eq
 import pandas as pd
 from trading_classes import Stock
-import talib
+#import talib
 
 
 #----------------------------------------------------------------------------------------
@@ -74,9 +80,15 @@ def get_p_dic(root_dir):
     d.update(eq_connection_p_dic)
     # Convert dates to datetime.date
     if d['Start date']:
-        d['Start date'] = datetime.datetime.strptime(str(d['Start date']), str(d['Format date string'])).date()
+        d['Start date'] = dt.datetime.strptime(str(d['Start date']), date_format).date()
     if d['End date']:
-        d['End date'] = datetime.datetime.strptime(str(d['End date']), str(d['Format date string'])).date()
+        d['End date'] = dt.datetime.strptime(str(d['End date']), date_format).date()
+    # Add desired algorithm params to dictionary (Need to convert string to function handle)
+    f = 'lib_alg.' + d['Algorithm name']
+    d['Algorithm function'] = eval(f)
+    # Add desired algorithm parameters
+    alg_params = d['Algorithm name'] + '_params'
+    d.update(cfg[alg_params])
     # Add filters to dictionary
     if d['Filters list'] != []:
         # Need to convert strings to function handles
@@ -86,12 +98,6 @@ def get_p_dic(root_dir):
             aux.append(eval(f))
         filter_p_dic['Filters list'] = aux
         d.update(filter_p_dic)
-    # Add desired algorithm params to dictionary (Need to convert string to function handle)
-    f = 'lib_alg.' + d['Algorithm name']
-    d['Algorithm function'] = eval(f)
-    # Add desired algorithm parameters
-    alg_params = d['Algorithm name'] + '_params'
-    d.update(cfg[alg_params])
 
     return d
 
@@ -113,7 +119,7 @@ def main(p_dic):
         ot_dic = {}
 
         # Create results directory and create output file from template
-        dir_name = datetime.datetime.now().strftime("%d%m%Y_%H%M%S")
+        dir_name = dt.datetime.now().strftime("%d%m%Y_%H%M%S")
         output_dir = lib_directory_ops.create_dir(p_dic['Excel output dir'], dir_name)
         assert output_dir != None
         new_file = 'output_' + dir_name + '.xlsx'
@@ -179,36 +185,61 @@ def main(p_dic):
 
                 # Only for adequate stocks is the trading algorithm applied
                 if analyze_ticker:
+                    # Start analysis or Backtesting or Optimization....
                     n_stocks_analyzed = n_stocks_analyzed + 1
                     if p_dic['Mode'] == 'Analysis':
-                        print('%s is being analyzed...' % ticker_sname)
+                        print('{} is being analyzed...'.format(ticker_sname))
                     if p_dic['Mode'] == 'Backtesting':
-                        print('%s is being backtested...' % ticker_sname)
+                        print('{} is being backtested...'.format(ticker_sname))
+                    if p_dic['Mode'] == 'Optimization':
+                        print('{} is being backtested through optimization...'.format(ticker_sname))
 
-                    [ot, pt_long, pt_short] = p_dic['Algorithm function'](p_dic, ticker_sname, t_ds)
 
-                    # Add to dictionary
-                    if not ot.is_empty():
-                        ot_dic[ticker_sname] = ot
-                    if not pt_long.is_empty():
-                        pt_long_dic[ticker_sname] = pt_long
-                    if not pt_short.is_empty():
-                        pt_short_dic[ticker_sname] = pt_short
+                    [sdate, edate] = lib_general_ops.get_analysis_time_interval(eq.get_dataset(), date_format, start_date=p_dic['Start date'], end_date=p_dic['End date'], last_n_points=p_dic['Last N days'])
+
+                    iterations = [1]
+                    if p_dic['Mode'] == 'Optimization':
+                        #iterations = opt.iterations()
+                        pass
+                    for i in iterations:
+                        pop = [1]
+                        if p_dic['Mode'] == 'Optimization':
+                            # pop = opt.population()
+                            pass
+                        for p in pop:
+
+                            alg_name = p_dic["Algorithm name"]
+                            ti_df = lib_alg.alg_trading_indicators(alg_name, eq, p_dic)
+
+                            curr_date = sdate
+                            while edate - curr_date >= dt.timedelta(0):
+
+                                [ot, pt_long, pt_short] = p_dic['Algorithm function'](p_dic, ticker_sname, t_ds)
+
+                                # Add to dictionary
+                                if not ot.is_empty():
+                                    ot_dic[ticker_sname] = ot
+                                if not pt_long.is_empty():
+                                    pt_long_dic[ticker_sname] = pt_long
+                                if not pt_short.is_empty():
+                                    pt_short_dic[ticker_sname] = pt_short
+
+                                # Increment current date
+                                curr_date += dt.timedelta(days=1)
 
                     # Write results
-                    if p_dic['Mode'] == 'Analysis':
-                        lib_write.write_results_to_excel(p_dic, wb, ot, write_params=False, write_table=True)
-                    if p_dic['Mode'] == 'Backtesting':
-                        lib_write.write_results_to_excel(p_dic, wb, pt_long, write_params=False, write_table=True)
-                    lib_excel.save_workbook(wb, output_file)
+                    #if p_dic['Mode'] == 'Analysis' or p_dic['Mode'] == 'Backtesting':
+                    #    lib_write.write_results_to_excel(p_dic, wb, ot, write_params=False, write_table=True)
+                    #lib_excel.save_workbook(wb, output_file)
+                    # Close necessary files
+                    wb.close()
 
-                    # Delete unnecessary objects
-                    del ot
-                    del pt_long
-                    del pt_short
+                        # Delete unnecessary objects
+                        #del ot
+                        #del pt_long
+                        #del pt_short
 
-        # Close necessary files
-        wb.close()
+
 
         # Statistics
         if n_total_stocks > 0:

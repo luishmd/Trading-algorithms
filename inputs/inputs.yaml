@@ -1,19 +1,15 @@
 # For a description of each parameter and their units of measurement, please check the README.md.
 
 exec_params:
-    Update data: False
+    Mode: Analysis
     Run algorithm: True
     Output template: output_algorithm_1_template.xlsx
-    Mode: Analysis
     Equities list: ["BCP.LS"]
-    Format date string: '%d/%m/%Y'
     Equities DB connection parameters file: YFINANCE_inputs.yaml
     Start date:
     End date:
     Last N days: 10
     Algorithm name: algorithm_1
-    Apply filters: True
-    Filters list: [dataset_size, dataset_old, turnover, price]
 
 Equities connection parameters:
     host: localhost
@@ -36,6 +32,8 @@ filter_params:
     Max days since update: 100000000
     
 algorithm_1_params:
+    Apply filters: True
+    Filters list: [dataset_size, dataset_old, turnover, price]
     Trending indicator: MA5/20
     Non-trending indicator: STOCH-S
     Trending threshold: 25
