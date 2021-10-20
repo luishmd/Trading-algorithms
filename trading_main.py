@@ -22,7 +22,7 @@ import lib_trading_print_results as lib_write
 import lib_excel_ops_openpyxl as lib_excel
 import yaml
 import lib_postgresql_ops as lib_pg
-import lib_data_yfinance as lib_yf
+import lib_db_equities as lib_db_eq
 import pandas as pd
 from trading_classes import Stock
 import talib
@@ -134,20 +134,31 @@ def main(p_dic):
         conn = lib_pg.get_pg_conn(p_dic['host'], p_dic['database'], p_dic['user'], p_dic['port'], p_dic['password'])
         for ticker in p_dic['Equities list']:
             # Get equity data
-            if lib_yf.exists_pg_master_table(conn, 'History', ticker):
+            # Get module
+            query = """SELECT "RetrievalPackage" FROM public."Master" WHERE "Ticker" = '{}' AND "TableType" = 'History';""".format(
+                ticker)
+            rows = lib_pg.query_pg_database(conn, query)
+            ticker_mod_name = ""
+            if len(rows) > 1:
+                print("[WARNING] More than one retrieval package for ticker: {}".format(ticker))
+                print("[WARNING] Using package: {}".format(rows[0][0]))
+            if len(rows) == 1:
+                ticker_mod_name = rows[0][0]
+            if ticker_mod_name and lib_db_eq.exists_pg_master_table(conn, 'History', ticker, ticker_mod_name):
+                # Get short name
+                query = """SELECT "ShortName" FROM public."Metadata" WHERE "Ticker" = '{}';""".format(ticker)
+                rows = lib_pg.query_pg_database(conn, query)
+                ticker_sname = rows[0][0]
                 # Get historic data
                 columns = '"Date", "Open", "High", "Low", "Close", "Volume"'
-                query = """SELECT {} FROM public."History-{}";""".format(columns, ticker)
+                query = """SELECT {} FROM public."History-{}-{}";""".format(columns, ticker_mod_name, ticker)
                 rows = lib_pg.query_pg_database(conn, query)
                 columns = columns.strip(' ')
                 columns = columns.split(',')
                 t_ds = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"])
                 t_ds = t_ds.set_index('Date')
                 assert not(t_ds.empty)
-                # Get short name
-                query = """SELECT "ShortName" FROM public."Metadata" WHERE "Ticker" = '{}';""".format(ticker)
-                rows = lib_pg.query_pg_database(conn, query)
-                ticker_sname = rows[0][0]
+
                 eq = Stock(ticker_sname, t_ds)
 
 
@@ -164,7 +175,7 @@ def main(p_dic):
                             analyze_stock = False
                             print('%s triggered filter <%s>.' % (ticker_sname, filter.__name__))
                             break
-                del eq
+                #del eq
 
                 # Only for adequate stocks is the trading algorithm applied
                 if analyze_ticker:
