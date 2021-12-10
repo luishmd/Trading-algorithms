@@ -101,6 +101,7 @@ def write_data(params_dic, mngr_table, ws):
             positions_list = mngr_table[k].get_positions_list()
             row_i = lib_excel.determine_first_empty_row(ws, row_start=8)
             ws.cell(row=3, column=2, value=params_dic['Algorithm name'])
+            ws.cell(row=4, column=2, value=mngr_table[k].get_profit_losses_pct())
             for position in positions_list:
                 id = row_i - 8 + 1
                 ws.cell(row=row_i, column=1, value=id)

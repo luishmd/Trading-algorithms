@@ -8,7 +8,7 @@ exec_params:
     Equities DB connection parameters file: YFINANCE_inputs.yaml
     Start date:
     End date:
-    Last N days:
+    Last N days: 1095
     Algorithm name: algorithm_SMA
 
 Equities connection parameters:
@@ -22,7 +22,7 @@ backtesting_params:
     Backtesting print positions: False
     Only long positions: True
     Max losses pct: 10
-    Typical trade value: 2000
+    Typical trade value: 10000
     Commission per trade: 5
 
 filter_params:

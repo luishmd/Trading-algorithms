@@ -298,9 +298,11 @@ class Position(object):
     def check_stop_loss(self, custom_dic_exit, stock_obj, date_obj, price):
         trade_closed = False
         if (self.position_type == 'long') and (price <= self.stop_loss_price):
+            custom_dic_exit['Stop Loss'] = 'Triggered'
             self.close_position(custom_dic_exit, stock_obj, date_obj, self.stop_loss_price)
             trade_closed = True
         if (self.position_type == 'short') and (price >= self.stop_loss_price):
+            custom_dic_exit['Stop Loss'] = 'Triggered'
             self.close_position(custom_dic_exit, stock_obj, date_obj, self.stop_loss_price)
             trade_closed = True
         return trade_closed
