@@ -11,15 +11,19 @@ __author__ = "Luis Domingues"
 #----------------------------------------------------------------------------------------
 import math
 import lib_general_ops
+import talib
+import pandas as pd
 
 #----------------------------------------------------------------------------------------
 # CLASSES
 #----------------------------------------------------------------------------------------
 class Stock(object):
     """ Creates a stock object """
-    def __init__(self, name, history_ds):
+    def __init__(self, name, history_df):
         self.name = name
-        self.history_ds = history_ds
+        self.history_df = history_df
+        self.ti_df = pd.DataFrame(history_df.index)
+        self.ti_df = self.ti_df.set_index('Date')
 
     def __str__(self):
         return "Stock: %s" % self.name
@@ -28,97 +32,74 @@ class Stock(object):
         return self.name
 
     def get_dataset(self):
-        return self.history_ds
+        return self.history_df
 
-    def set_trend(self, trend_int):
-        """
-        :param trend_int (either -1; 0; 1:
-        :return:
-        """
-        self.trend = trend_int
+    def get_previous_day(self, curr_day):
+        return lib_general_ops.get_previous_date(self.history_df, curr_day)
 
-    def get_trend(self):
-        return self.trend
+    def get_next_day(self, curr_day):
+        return lib_general_ops.get_next_date(self.history_df, curr_day)
 
-    def set_MA_5(self, MA_5_value):
-        self.MA_5 = MA_5_value
+    def get_technical_indicators(self):
+        return self.ti_df
 
-    def get_MA_5(self):
-        return self.MA_5
+    def get_SMA(self, p):
+        s = "SMA_{}".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.SMA(self.history_df['Close'], p)
+        return self.ti_df[s]
 
-    def set_MA_20(self, MA_20_value):
-        self.MA_20 = MA_20_value
+    def get_SMA_turnover(self, p):
+        s = "SMA_{}_turnover".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.SMA(self.history_df['Turnover'], p)
+        return self.ti_df[s]
 
-    def get_MA_20(self):
-        return self.MA_20
+    def get_SMA_price(self, p):
+        s = "SMA_{}_price".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.SMA(self.history_df['Low'], p)
+        return self.ti_df[s]
 
-    def set_MA_50(self, MA_50_value):
-        self.MA_50 = MA_50_value
+    def get_RSI(self, p=14):
+        s = "RSI_{}".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.RSI(self.history_df['Close'], p)
+        return self.ti_df[s]
 
-    def get_MA_50(self):
-        return self.MA_50
+    def get_STOCH(self, fastk_period=10, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0):
+        s_slowk = "STOCH_K_{}_{}_{}".format(fastk_period, slowk_period, slowd_period)
+        s_slowd = "STOCH_D_{}_{}_{}".format(fastk_period, slowk_period, slowd_period)
+        if (s_slowk not in self.ti_df.columns) or (s_slowd not in self.ti_df.columns):
+            [self.ti_df[s_slowk], self.ti_df[s_slowd]] = talib.STOCH(self.history_df['High'], self.history_df['Low'], self.history_df['Close'],
+                                                                     fastk_period, slowk_period,
+                                                                     slowk_matype,
+                                                                     slowd_period, slowd_matype)
+        return self.ti_df[s_slowk], self.ti_df[s_slowd]
 
-    def set_MA_100(self, MA_50_value):
-        self.MA_100 = MA_50_value
+    def get_DI_positive(self, p=14):
+        s = "DI_plus_{}".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.PLUS_DI(self.history_df['High'], self.history_df['Low'], self.history_df['Close'], p)
+        return self.ti_df[s]
 
-    def get_MA_100(self):
-        return self.MA_100
+    def get_DI_negative(self, p=14):
+        s = "DI_minus_{}".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.MINUS_DI(self.history_df['High'], self.history_df['Low'], self.history_df['Close'], p)
+        return self.ti_df[s]
 
-    def set_MA_200(self, MA_200_value):
-        self.MA_200 = MA_200_value
-
-    def get_MA_200(self):
-        return self.MA_200
-
-    def set_RSI(self, RSI_value):
-        self.RSI = RSI_value
-
-    def get_RSI(self):
-        return self.RSI
-
-    def set_STOCH_S(self, STOCH_S_K_value, STOCH_S_D_value):
-        self.STOCH_S_D = STOCH_S_D_value
-        self.STOCH_S_K = STOCH_S_K_value
-
-    def get_STOCH_S(self):
-        return [self.STOCH_S_K, self.STOCH_S_D]
-
-    def set_DI_positive(self, DI_plus_value):
-        self.DI_plus = DI_plus_value
-
-    def get_DI_positive(self):
-        return self.DI_plus
-
-    def set_DI_negative(self, DI_minus_value):
-        self.DI_minus = DI_minus_value
-
-    def get_DI_negative(self):
-        return self.DI_minus
-
-    def set_ADX(self, ADX_value):
-        self.ADX = ADX_value
-
-    def get_ADX(self):
-        return self.ADX
-
-    def set_MA_turnover(self, MA_turnover_value):
-        self.MA_turnover = MA_turnover_value
-
-    def get_MA_turnover(self):
-        return self.MA_turnover
-
-    def set_MA_price(self, MA_price_value):
-        self.MA_price = MA_price_value
-
-    def get_MA_price(self):
-        return self.MA_price
+    def get_ADX(self, p=14):
+        s = "ADX_{}".format(str(p))
+        if s not in self.ti_df.columns:
+            self.ti_df[s] = talib.ADX(self.history_df['High'], self.history_df['Low'], self.history_df['Close'], p)
+        return self.ti_df[s]
 
 
 class Order(object):
     """Creates an order class"""
-    def __init__(self, id, stock_obj, ta_indicator, position_type, order_type, date_obj, price, stop_loss_price=None, money_typical_trade=None, commission_per_op=5):
+    def __init__(self, id, custom_dic, stock_obj, position_type, order_type, date_obj, price, stop_loss_price=None, money_typical_trade=None, commission_per_op=5):
         self.id = id
-        self.ta_indicator = ta_indicator
         self.stock_obj = stock_obj
         self.name = stock_obj.get_name()
         self.position_type = position_type # either 'long' or 'short'
@@ -126,6 +107,7 @@ class Order(object):
         self.stop_loss_price = stop_loss_price
         self.date = date_obj
         self.price = price
+        self.custom_dic = custom_dic
         if money_typical_trade != None:
             self.amount = math.floor((money_typical_trade-commission_per_op)/price)
 
@@ -167,8 +149,8 @@ class Order(object):
     def get_stock(self):
         return self.stock_obj
 
-    def get_ta_indicator(self):
-        return self.ta_indicator
+    def get_custom(self):
+        return self.custom_dic
 
 
 class Orders_table:
@@ -203,23 +185,23 @@ class Orders_table:
     def get_orders_list(self):
         return self.orders_list
 
-    def create_order(self, id, stock_obj, ta_indicator, position_type, order_type, date_obj, price, stop_loss_price=None, money_typical_trade=None, commission_per_op=5):
-        order_inst = Order(id, stock_obj, ta_indicator, position_type, order_type, date_obj, price, stop_loss_price, money_typical_trade, commission_per_op)
+    def create_order(self, custom_dic, stock_obj, position_type, order_type, date_obj, price, stop_loss_price=None, money_typical_trade=None, commission_per_op=5):
+        order_inst = Order(self.n_orders, custom_dic, stock_obj, position_type, order_type, date_obj, price, stop_loss_price, money_typical_trade, commission_per_op)
         self.orders_list.append(order_inst)
         self.n_orders = self.n_orders + 1
 
 
 class Position(object):
     """Creates a position class"""
-    def __init__(self, id, stock_obj_entry, ta_indicator_entry, position_type, money_typical_trade, date_obj_entry, price_entry, stop_loss_price, comission_per_op=5):
+    def __init__(self, id, custom_dic_entry, stock_obj_entry, position_type, money_typical_trade, date_obj_entry, price_entry, stop_loss_price, comission_per_op=5):
         self.id = id
-        self.ta_indicator_entry = ta_indicator_entry
         self.stock_obj_entry = stock_obj_entry
         self.name = stock_obj_entry.get_name()
         self.position_type = position_type
         self.stop_loss_price = stop_loss_price
         self.date_entry = date_obj_entry
         self.price_entry = price_entry
+        self.custom_dic_entry = custom_dic_entry
         self.amount = math.floor((money_typical_trade-comission_per_op)/price_entry)
         self.money_entry = self.amount*self.price_entry + comission_per_op
 
@@ -270,11 +252,11 @@ class Position(object):
     def get_stock_exit(self):
         return self.stock_obj_exit
 
-    def get_ta_indicator_entry(self):
-        return self.ta_indicator_entry
+    def get_custom_entry(self):
+        return self.custom_dic_entry
 
-    def get_ta_indicator_exit(self):
-        return self.ta_indicator_exit
+    def get_custom_exit(self):
+        return self.custom_dic_exit
 
     def get_money_entry(self):
         return self.money_entry
@@ -283,11 +265,11 @@ class Position(object):
         return self.money_exit
 
     # There is no open_position method because instantiating this class is opening a position
-    def close_position(self, stock_obj_exit, ta_indicator_exit, date_obj_exit, price_exit):
+    def close_position(self, custom_dic_exit, stock_obj_exit, date_obj_exit, price_exit):
         self.date_exit = date_obj_exit
         self.price_exit = price_exit
         self.stock_obj_exit = stock_obj_exit
-        self.ta_indicator_exit = ta_indicator_exit
+        self.custom_dic_exit = custom_dic_exit
         self.state = 'closed'
         self.money_exit = self.amount*self.price_exit - self.comission_per_op
         if self.position_type == 'long':
@@ -312,21 +294,21 @@ class Position(object):
             print('Position (%s, %s) is still open.' % (self.name, str(self.id)))
             return None
 
-    def check_stop_loss(self, stock_obj, ta_indicator_exit, date_obj, price):
+    def check_stop_loss(self, custom_dic_exit, stock_obj, date_obj, price):
         trade_closed = False
         if (self.position_type == 'long') and (price <= self.stop_loss_price):
-            self.close_position(stock_obj, ta_indicator_exit, date_obj, self.stop_loss_price)
+            self.close_position(custom_dic_exit, stock_obj, date_obj, self.stop_loss_price)
             trade_closed = True
         if (self.position_type == 'short') and (price >= self.stop_loss_price):
-            self.close_position(stock_obj, ta_indicator_exit, date_obj, self.stop_loss_price)
+            self.close_position(custom_dic_exit, stock_obj, date_obj, self.stop_loss_price)
             trade_closed = True
         return trade_closed
 
 
 class Positions_table(object):
     """Creates a trades table class"""
-    def __init__(self, stock_name, positions_type):
-        self.name = stock_name
+    def __init__(self, stock_obj, positions_type):
+        self.name = stock_obj.get_name()
         self.positions_list = []
         self.n_positions = 0
         self.positions_type = positions_type
@@ -354,25 +336,25 @@ class Positions_table(object):
     def get_name(self):
         return self.name
 
-    def create_position(self, id, stock_obj, ta_indicator_entry, position_type, money_typical_trade, entry_date_obj, entry_price, stop_loss_price, comission_per_op=5):
-        trade_inst = Position(id, stock_obj, ta_indicator_entry, position_type, money_typical_trade, entry_date_obj, entry_price, stop_loss_price, comission_per_op=comission_per_op)
-        self.positions_list.append(trade_inst)
+    def create_position(self, custom_dic_entry, stock_obj, position_type, money_typical_trade, entry_date_obj, entry_price, stop_loss_price, comission_per_op=5):
+        pos_inst = Position(self.n_positions, custom_dic_entry, stock_obj, position_type, money_typical_trade, entry_date_obj, entry_price, stop_loss_price, comission_per_op=comission_per_op)
+        self.positions_list.append(pos_inst)
         self.n_positions = self.n_positions + 1
-        self.total_money_entry += trade_inst.get_money_entry()
+        self.total_money_entry += pos_inst.get_money_entry()
         return None
 
-    def check_stop_loss(self, stock_obj, ta_indicator_exit, date_obj, price):
+    def check_stop_loss(self, custom_dic_exit, stock_obj, date_obj, price):
         for position in self.positions_list:
             if position.get_state() == 'open':
-                is_closed = position.check_stop_loss(stock_obj, ta_indicator_exit, date_obj, price)
+                is_closed = position.check_stop_loss(custom_dic_exit, stock_obj, date_obj, price)
                 if is_closed:
                     self.total_money_exit += position.get_money_exit()
         return None
 
-    def close_opened_positions(self, stock_obj_exit, ta_indicator_exit, position_type, date_obj_exit, price_exit):
+    def close_opened_positions(self, custom_dic_exit, stock_obj_exit, position_type, date_obj_exit, price_exit):
         for position in self.positions_list:
             if (position.get_state() == 'open') and (position.get_position_type() == position_type):
-                position.close_position(stock_obj_exit, ta_indicator_exit, date_obj_exit, price_exit)
+                position.close_position(custom_dic_exit, stock_obj_exit, date_obj_exit, price_exit)
                 self.total_money_exit += position.get_money_exit()
         return None
 
@@ -393,8 +375,8 @@ class Positions_table(object):
         return total_profit_losses
 
     def get_profit_losses_pct(self):
-        total_profit_losses = self.get_profit_losses(self)
-        total_money_entry = self.get_total_money_entry(self)
+        total_profit_losses = self.get_profit_losses()
+        total_money_entry = self.get_total_money_entry()
         try:
             total_profit_losses_pct = float(total_profit_losses)/float(total_money_entry) * 100
         except ZeroDivisionError:
@@ -403,66 +385,58 @@ class Positions_table(object):
         return total_profit_losses_pct
 
 
-class Algorithm(object):
-    """Creates an Algorithm class"""
-    def __init__(self, params_dic, stock_name, stock_ds):
+class Trading_Manager(object):
+    """Creates a Trading_Manager class"""
+    def __init__(self, params_dic):
         # For analysis
-        self.ot = Orders_table(stock_name)
-        self.order_id = 1
+        if params_dic['Mode'] == 'Analysis':
+            self.ot = Orders_table("Orders")
         # For backtesting
-        self.pt_long = Positions_table(stock_name, 'long')
-        self.pt_short = Positions_table(stock_name, 'short')
-        self.position_id = 1
+        if (params_dic['Mode'] == 'Backtesting') or (params_dic['Mode'] == 'Optimization'):
+            self.pt_long = {}
+            if not params_dic['Only long positions']:
+                self.pt_short = {}
 
         self.value_typical_trade = params_dic['Typical trade value']
         self.commission_value = params_dic['Commission per trade']
 
-        # Calculate start and end days for analysis
-        self.start_date_obj = params_dic['Start date']
-        self.end_date_obj = params_dic['End date']
-        self.last_n_points = params_dic['Last N days']
-        if params_dic['Mode'] == 'Analysis':
-            [self.start_date_anal_obj, self.end_date_anal_obj] = lib_general_ops.get_analysis_time_interval(stock_ds, self.start_date_obj, self.end_date_obj,self.last_n_points)
-        if params_dic['Mode'] == 'Backtesting':
-            self.start_date_anal_obj = lib_general_ops.get_first_date(stock_ds)
-            self.end_date_anal_obj = lib_general_ops.get_last_date(stock_ds)
-
-    def manage_orders_positions(self, params_dic, stock_obj, ta_indicator, trading_signal_long, trading_signal_short, stock_ds, day):
+    def manage_orders_positions(self, params_dic, custom_dic, stock_obj, day):
+        price = stock_obj.get_dataset()['Close'][day]
         if params_dic['Mode'] == 'Analysis':
             # Long
-            if trading_signal_long == 'buy':
-                stop_loss = stock_ds['Last'][day] * (1.0 - params_dic['Max losses pct'] / 100.0)
-                self.ot.create_order(self.order_id, stock_obj, ta_indicator, 'long', trading_signal_long, day, stock_ds['Last'][day], stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
-                self.order_id = self.order_id + 1
-            if trading_signal_long == 'sell':
-                self.ot.create_order(self.order_id, stock_obj, ta_indicator, 'long', trading_signal_long, day, stock_ds['Last'][day], money_typical_trade=self.value_typical_trade)
-                self.order_id = self.order_id + 1
+            if custom_dic['Trading signal long'] == 'buy':
+                stop_loss = price * (1.0 - params_dic['Max losses pct'] / 100.0)
+                self.ot.create_order(custom_dic, stock_obj, 'long', 'buy', day, price, stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
+            if custom_dic['Trading signal long'] == 'sell':
+                self.ot.create_order(custom_dic, stock_obj, 'long', 'sell', day, price, money_typical_trade=self.value_typical_trade)
 
             # Short
-            if (trading_signal_short == 'buy') and (params_dic['Only long positions'] == False):
-                stop_loss = stock_ds['Last'][day] * (1.0 + params_dic['Max losses pct'] / 100.0)
-                self.ot.create_order(self.order_id, stock_obj, ta_indicator, 'short', trading_signal_long, day, stock_ds['Last'][day], stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
-                self.order_id = self.order_id + 1
-            if (trading_signal_short == 'sell') and (params_dic['Only long positions'] == False):
-                self.ot.create_order(self.order_id, stock_obj, ta_indicator, 'short', trading_signal_long, day, stock_ds['Last'][day])
-                self.order_id = self.order_id + 1
+            if not params_dic['Only long positions']:
+                if custom_dic['Trading signal short'] == 'buy':
+                    stop_loss = price * (1.0 + params_dic['Max losses pct'] / 100.0)
+                    self.ot.create_order(custom_dic, stock_obj, 'short', 'buy', day, price, stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
+                if custom_dic['Trading signal short'] == 'sell':
+                    self.ot.create_order(stock_obj, 'short', 'sell', day, price)
 
-        if params_dic['Mode'] == 'Backtesting':
+        if (params_dic['Mode'] == 'Backtesting') or (params_dic['Mode'] == 'Optimization'):
             # Long
-            self.pt_long.check_stop_loss(stock_obj, 'Stop loss', day, stock_ds['Low'][day])
-            if trading_signal_long == 'buy':
-                stop_loss = stock_ds['Last'][day] * (1.0 - params_dic['Max losses pct'] / 100.0)
-                self.pt_long.create_position(self.position_id, stock_obj, ta_indicator, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=stock_ds['Last'][day], stop_loss_price=stop_loss)
-                self.position_id = self.position_id + 1
-            if trading_signal_long == 'sell':
-                self.pt_long.close_opened_positions(stock_obj, ta_indicator, 'long', date_obj_exit=day, price_exit=stock_ds['Last'][day])
+            if stock_obj.get_name() not in self.pt_long.keys():
+                self.pt_long[stock_obj.get_name()] = Positions_table(stock_obj, 'long')
+            self.pt_long[stock_obj.get_name()].check_stop_loss(stock_obj, 'Stop loss', day, price)
+            if custom_dic['Trading signal long'] == 'buy':
+                stop_loss = price * (1.0 - params_dic['Max losses pct'] / 100.0)
+                self.pt_long[stock_obj.get_name()].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+            if custom_dic['Trading signal long'] == 'sell':
+                self.pt_long[stock_obj.get_name()].close_opened_positions(custom_dic, stock_obj, 'long', date_obj_exit=day, price_exit=price)
 
             # Short
-            self.pt_short.check_stop_loss(stock_obj, 'Stop loss', day, stock_ds['Low'][day])
-            if (trading_signal_short == 'buy') and (params_dic['Only long positions'] == False):
-                stop_loss = stock_ds['Last'][day] * (1.0 + params_dic['Max losses pct'] / 100.0)
-                self.pt_short.create_position(self.position_id, stock_obj, ta_indicator, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=stock_ds['Last'][day], stop_loss_price=stop_loss)
-                self.position_id = self.position_id + 1
-            if (trading_signal_short == 'sell') and (params_dic['Only long positions'] == False):
-                self.pt_short.close_opened_positions(stock_obj, ta_indicator, 'short', date_obj_exit=day, price_exit=stock_ds['Last'][day])
-        return [self.ot, self.pt_long, self.pt_short]
+            if not params_dic['Only long positions']:
+                if stock_obj.get_name() not in self.pt_short.keys():
+                    self.pt_short[stock_obj.get_name()] = Positions_table(stock_obj, 'short')
+                self.pt_short[stock_obj.get_name()].check_stop_loss(stock_obj, 'Stop loss', day, price)
+                if custom_dic['Trading signal short'] == 'buy':
+                    stop_loss = price * (1.0 + params_dic['Max losses pct'] / 100.0)
+                    self.pt_short[stock_obj.get_name()].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+                if custom_dic['Trading signal short'] == 'sell':
+                    self.pt_short[stock_obj.get_name()].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
+        return 0

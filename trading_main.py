@@ -31,7 +31,7 @@ import lib_postgresql_ops as lib_pg
 import lib_db_equities as lib_db_eq
 import pandas as pd
 from trading_classes import Stock
-#import talib
+from trading_classes import Trading_Manager
 
 
 #----------------------------------------------------------------------------------------
@@ -113,11 +113,6 @@ def main(p_dic):
     """
     # Run algorithm
     if p_dic['Run algorithm']:
-        # Orders and positions tables
-        pt_long_dic = {}
-        pt_short_dic = {}
-        ot_dic = {}
-
         # Create results directory and create output file from template
         dir_name = dt.datetime.now().strftime("%d%m%Y_%H%M%S")
         output_dir = lib_directory_ops.create_dir(p_dic['Excel output dir'], dir_name)
@@ -133,6 +128,9 @@ def main(p_dic):
         lib_write.write_results_to_excel(p_dic, wb, write_params=True, write_table=False)
         lib_excel.save_workbook(wb, output_file)
         assert wb != None
+
+        # Initialise tables manager
+        Mngr = Trading_Manager(p_dic)
 
         # For every stock...
         n_total_stocks = len(p_dic['Equities list'])
@@ -159,17 +157,16 @@ def main(p_dic):
                 columns = '"Date", "Open", "High", "Low", "Close", "Volume"'
                 query = """SELECT {} FROM public."History-{}-{}";""".format(columns, ticker_mod_name, ticker)
                 rows = lib_pg.query_pg_database(conn, query)
-                columns = columns.strip(' ')
-                columns = columns.split(',')
-                t_ds = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"])
-                t_ds = t_ds.set_index('Date')
-                assert not(t_ds.empty)
+                #columns = columns.strip(' ')
+                #columns = columns.split(',')
+                history_df = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"])
+                history_df = history_df.set_index('Date')
+                assert not(history_df.empty)
 
-                eq = Stock(ticker_sname, t_ds)
-
+                eq = Stock(ticker_sname, history_df)
 
                 # Determine start and end dates for analysis and dataset
-                [start_date_ds_obj, end_date_ds_obj] = lib_general_ops.get_dataset_time_interval(t_ds)
+                [start_date_ds_obj, end_date_ds_obj] = lib_general_ops.get_dataset_time_interval(history_df)
 
                 # Apply filters only to analysis interval
                 analyze_ticker = True
@@ -179,20 +176,19 @@ def main(p_dic):
                         # if a ticker does not pass a single filter it will not be analyzed
                         if not filter(eq, start_date_ds_obj, end_date_ds_obj, p_dic):
                             analyze_stock = False
-                            print('%s triggered filter <%s>.' % (ticker_sname, filter.__name__))
+                            print('%s triggered filter <%s>.' % (eq.get_name(), filter.__name__))
                             break
-                #del eq
 
                 # Only for adequate stocks is the trading algorithm applied
                 if analyze_ticker:
                     # Start analysis or Backtesting or Optimization....
                     n_stocks_analyzed = n_stocks_analyzed + 1
                     if p_dic['Mode'] == 'Analysis':
-                        print('{} is being analyzed...'.format(ticker_sname))
+                        print('{} is being analyzed...'.format(eq.get_name()))
                     if p_dic['Mode'] == 'Backtesting':
-                        print('{} is being backtested...'.format(ticker_sname))
+                        print('{} is being backtested...'.format(eq.get_name()))
                     if p_dic['Mode'] == 'Optimization':
-                        print('{} is being backtested through optimization...'.format(ticker_sname))
+                        print('{} is being backtested through optimization...'.format(eq.get_name()))
 
 
                     [sdate, edate] = lib_general_ops.get_analysis_time_interval(eq.get_dataset(), date_format, start_date=p_dic['Start date'], end_date=p_dic['End date'], last_n_points=p_dic['Last N days'])
@@ -208,45 +204,36 @@ def main(p_dic):
                             pass
                         for p in pop:
 
-                            alg_name = p_dic["Algorithm name"]
-                            ti_df = lib_alg.alg_trading_indicators(alg_name, eq, p_dic)
-
                             curr_date = sdate
                             while edate - curr_date >= dt.timedelta(0):
 
-                                [ot, pt_long, pt_short] = p_dic['Algorithm function'](p_dic, ticker_sname, t_ds)
+                                # Run trading algorithm
+                                custom_dic = p_dic['Algorithm function'](p_dic, eq, curr_date)
 
-                                # Add to dictionary
-                                if not ot.is_empty():
-                                    ot_dic[ticker_sname] = ot
-                                if not pt_long.is_empty():
-                                    pt_long_dic[ticker_sname] = pt_long
-                                if not pt_short.is_empty():
-                                    pt_short_dic[ticker_sname] = pt_short
+                                # Manage orders and positions
+                                if custom_dic:
+                                    Mngr.manage_orders_positions(p_dic, custom_dic, eq, curr_date)
 
                                 # Increment current date
-                                curr_date += dt.timedelta(days=1)
+                                print(curr_date)
+                                curr_date = eq.get_next_day(curr_date)
 
-                    # Write results
-                    #if p_dic['Mode'] == 'Analysis' or p_dic['Mode'] == 'Backtesting':
-                    #    lib_write.write_results_to_excel(p_dic, wb, ot, write_params=False, write_table=True)
-                    #lib_excel.save_workbook(wb, output_file)
-                    # Close necessary files
-                    wb.close()
+                del eq
 
-                        # Delete unnecessary objects
-                        #del ot
-                        #del pt_long
-                        #del pt_short
+        # Write results
+        #if p_dic['Mode'] == 'Analysis' or p_dic['Mode'] == 'Backtesting':
+        #    lib_write.write_results_to_excel(p_dic, wb, ot, write_params=False, write_table=True)
+        #lib_excel.save_workbook(wb, output_file)
+        # Close necessary files
+        wb.close()
 
-
+        del Mngr
 
         # Statistics
         if n_total_stocks > 0:
             print("\nFinished !\n%s of %s stocks analyzed (%0.1f %%)" % (str(n_stocks_analyzed), str(n_total_stocks), float(n_stocks_analyzed)/n_total_stocks*100))
         else:
             print("\nFinished ! No stocks analyzed")
-
         return 0
 
 #----------------------------------------------------------------------------------------

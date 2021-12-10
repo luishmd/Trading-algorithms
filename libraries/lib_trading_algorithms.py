@@ -9,11 +9,7 @@ __author__ = "Luis Domingues"
 #----------------------------------------------------------------------------------------
 # IMPORTS
 #----------------------------------------------------------------------------------------
-import talib
-import datetime
 import lib_general_ops
-from trading_classes import Stock, Algorithm
-import pandas as pd
 
 #----------------------------------------------------------------------------------------
 # INPUTS
@@ -23,66 +19,54 @@ import pandas as pd
 #----------------------------------------------------------------------------------------
 # FUNCTIONS
 #----------------------------------------------------------------------------------------
-def alg_trading_indicators(alg_name, eq, p_dic):
-    ti_df = pd.DataFrame(eq.get_dataset().index)
-    ti_df.set_index('Date')
-    hist = eq.get_dataset()
-    if alg_name == "algorithm_1":
-        ti_df["ADX_14"] = talib.ADX(hist['High'], hist['Low'], hist['Close'], 14)
-        ti_df["DI_plus_14"] = talib.PLUS_DI(hist['High'], hist['Low'], hist['Close'], 14)
-        ti_df["DI_minus_14"] = talib.MINUS_DI(hist['High'], hist['Low'], hist['Close'], 14)
-        ti_df["MA_50"] = talib.SMA(hist['Close'], 50)
-        ti_df["MA_100"] = talib.SMA(hist['Close'], 100)
-        ti_df["MA_200"] = talib.SMA(hist['Close'], 200)
-        ti_df["MA_50_turnover"] = talib.SMA(hist['Turnover'], 50)
-        ti_df["MA_50_price"] = talib.SMA(hist['Low'], 50)
-        if p_dic['Trending indicator'] == 'MA5/20':
-            ti_df["MA_5"] = talib.SMA(hist['Close'], 5)
-            ti_df["MA_20"] = talib.SMA(hist['Close'], 20)
-        if p_dic['Non-trending indicator'] == 'STOCH-S':
-            [ti_df["STOCH_K_10_3_3"], ti_df["STOCH_D_10_3_3"]] = talib.STOCH(hist['High'], hist['Low'], hist['Close'],
-                                                                             fastk_period=10, slowk_period=3, slowk_matype=0,
-                                                                             slowd_period=3, slowd_matype=0)
-    if alg_name == "Algorithm 2":
-        pass
-    return ti_df
 
 
 #----------------------------------------------------------------------------------------
 # ALGORITHMS
 #----------------------------------------------------------------------------------------
-def algorithm_1(p_dic, eq, hist, ti_df, day, last_day):
+def algorithm_1(p_dic, eq, day):
+    # Get technical indicators
+    ti_df = eq.get_technical_indicators()
+    s_ADX = "ADX_{}".format(p_dic["ADX period"])
+    ti_df[s_ADX] = eq.get_ADX(int(p_dic["ADX period"]))
+    s_DI_plus = "DI_plus_{}".format(p_dic["ADX period"])
+    s_DI_minus = "DI_minus_{}".format(p_dic["ADX period"])
+    ti_df[s_DI_plus] = eq.get_DI_positive(p_dic["ADX period"])
+    ti_df[s_DI_minus] = eq.get_DI_negative(p_dic["ADX period"])
+    if p_dic["Trending indicator"] == "SMA":
+        (p_fast, p_slow) = eval(p_dic["Trending indicator parameters"])
+        s_SMA_fast = "SMA_{}".format(p_fast)
+        s_SMA_slow = "SMA_{}".format(p_slow)
+        ti_df[s_SMA_fast] = eq.get_SMA(int(p_fast))
+        ti_df[s_SMA_slow] = eq.get_SMA(int(p_slow))
+    if p_dic["Non-trending indicator"] == "STOCH-S":
+        (fastk_period, slowk_period, slowd_period) = eval(p_dic["Non-trending indicator parameters"])
+        s_STOCH_K = "STOCH_K_".format(fastk_period, slowk_period, slowd_period)
+        s_STOCH_D = "STOCH_D_".format(fastk_period, slowk_period, slowd_period)
+        ti_df[s_STOCH_K], ti_df[s_STOCH_D] = eq.get_STOCH(fastk_period, slowk_period, 0, slowd_period, 0)
+    if p_dic["MT trend TA indicator"] == "SMA":
+        s_SMA_MT_trend = "SMA_{}".format(p_dic["MT trend TA indicator period"])
+        ti_df[s_SMA_MT_trend] = eq.get_SMA(int(p_dic["MT trend TA indicator period"]))
 
+    # Initialise remaining variables
+    previous_day = eq.get_previous_day(day)
+    custom_dic = {}
     nan_in_data = False
 
+    # Run algorithm
     if not nan_in_data:
         # Determine trend direction
-        if ti_df["ADX_14"][day] > p_dic["Trending threshold"]:
-            if ti_df["DI_plus_14"][day] > ti_df["DI_minus_14"][day]:
-                eq.set_trend(1)
+        if ti_df[s_ADX][day] > p_dic["Trending threshold"]:
+            if ti_df[s_DI_plus][day] > ti_df[s_DI_minus][day]:
+                trend = 1
             else:
-                eq.set_trend(-1)
+                trend = -1
         else:
-            eq.set_trend(0)
+            trend = 0
 
         medium_term_trend = '+ or -'
-        if p_dic['MT trend TA indicator'] == 'MA20':
-            if ti_df["MA_20"][day] - ti_df["MA_20"][previous_day]>0:
-                medium_term_trend = '+'
-            else:
-                medium_term_trend = '-'
-        if p_dic['MT trend TA indicator'] == 'MA50':
-            if ti_df["MA_50"][day] - ti_df["MA_50"][previous_day]>0:
-                medium_term_trend = '+'
-            else:
-                medium_term_trend = '-'
-        if p_dic['MT trend TA indicator'] == 'MA100':
-            if ti_df["MA_100"][day] - ti_df["MA_100"][previous_day]>0:
-                medium_term_trend = '+'
-            else:
-                medium_term_trend = '-'
-        if p_dic['MT trend TA indicator'] == 'MA200':
-            if ti_df["MA_200"][day] - ti_df["MA_200"][previous_day]>0:
+        if p_dic['MT trend TA indicator'] == 'SMA':
+            if ti_df[s_SMA_MT_trend][day] - ti_df[s_SMA_MT_trend][previous_day] > 0:
                 medium_term_trend = '+'
             else:
                 medium_term_trend = '-'
@@ -93,13 +77,10 @@ def algorithm_1(p_dic, eq, hist, ti_df, day, last_day):
         trading_signal_long = ''
         trading_signal_short = ''
         ta_indicator = ''
-        # Use MA if trending
-        if eq.get_trend() == 1 or eq.get_trend() == -1:
-            if p_dic['Trending indicator'] == 'MA5/20':
-                [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df["MA_5"][previous_day], ti_df["MA_5"][day], ti_df["MA_20"][previous_day], ti_df["MA_20"][day])
-
-            if p_dic['Trending indicator'] == 'MA20/50':
-                [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df["MA_20"][previous_day], ti_df["MA_20"][day], ti_df["MA_50"][previous_day], ti_df["MA_50"][day])
+        # if trending
+        if trend == 1 or trend == -1:
+            if p_dic['Trending indicator'] == 'SMA':
+                [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df[s_SMA_fast][previous_day], ti_df[s_SMA_fast][day], ti_df[s_SMA_slow][previous_day], ti_df[s_SMA_slow][day])
 
             if cross_test and cross_direction == '+' and ('+' in medium_term_trend):
                 ta_indicator = p_dic['Trending indicator']
@@ -111,39 +92,36 @@ def algorithm_1(p_dic, eq, hist, ti_df, day, last_day):
                 trading_signal_long = 'sell'
                 trading_signal_short = 'buy'
 
-        # Use stochastics if not trending
-        if eq.get_trend() == 0:
+        # if not trending
+        if trend == 0:
             if p_dic['Non-trending indicator'] == 'STOCH-S':
-                if ((ti_df["STOCH_K_10_3_3"][day] < p_dic["STOCH-S Oversold"]) and (ti_df["STOCH_D_10_3_3"][day] < p_dic["STOCH-S Oversold"])) or ((ti_df["STOCH_K_10_3_3"][day] > p_dic["STOCH-S Overbought"]) and (ti_df["STOCH_D_10_3_3"][day] > p_dic["STOCH-S Overbought"])):
-                    previous_day = lib_general_ops.get_previous_date(hist, day)
-                    [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df["STOCH_K_10_3_3"][previous_day], ti_df["STOCH_K_10_3_3"][day], ti_df["STOCH_D_10_3_3"][previous_day], ti_df["STOCH_D_10_3_3"][day])
+                if ((ti_df[s_STOCH_K][day] < p_dic["STOCH-S Oversold"]) and (ti_df[s_STOCH_D][day] < p_dic["STOCH-S Oversold"])) or ((ti_df[s_STOCH_K][day] > p_dic["STOCH-S Overbought"]) and (ti_df[s_STOCH_D][day] > p_dic["STOCH-S Overbought"])):
 
-            if cross_test and cross_direction == '+' and (ti_df["STOCH_K_10_3_3"][day] < p_dic["STOCH-S Oversold"] or (ti_df["STOCH_D_10_3_3"][day]) < p_dic["STOCH-S Oversold"]):
+                    [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df[s_STOCH_K][previous_day], ti_df[s_STOCH_K][day], ti_df[s_STOCH_D][previous_day], ti_df[s_STOCH_D][day])
+
+            if cross_test and cross_direction == '+' and (ti_df[s_STOCH_K][day] < p_dic["STOCH-S Oversold"] or (ti_df[s_STOCH_D][day]) < p_dic["STOCH-S Oversold"]):
                 ta_indicator = p_dic['Non-trending indicator']
                 trading_signal_long = 'buy'
                 trading_signal_short = 'sell'
 
-            if cross_test and cross_direction == '-' and (ti_df["STOCH_K_10_3_3"][day] > p_dic["STOCH-S Overbought"] or (ti_df["STOCH_D_10_3_3"][day]) > p_dic["STOCH-S Overbought"]) :
+            if cross_test and cross_direction == '-' and (ti_df[s_STOCH_K][day] > p_dic["STOCH-S Overbought"] or (ti_df[s_STOCH_D][day]) > p_dic["STOCH-S Overbought"]) :
                 ta_indicator = p_dic['Non-trending indicator']
                 trading_signal_long = 'sell'
                 trading_signal_short = 'buy'
 
-        # Open/close positions
+        # Custom parameters
         if cross_test:
-            eq.set_DI_negative(ti_df["DI_minus_14"][day])
-            eq.set_ADX(ti_df["ADX_14"][day])
-            eq.set_MA_turnover(ti_df["MA_50_turnover"][day])
-            eq.set_MA_price(ti_df["MA_50_price"][day])
-            eq.set_MA_50(ti_df["MA_50"][day])
-            eq.set_MA_100(ti_df["MA_100"][day])
-            eq.set_MA_200(ti_df["MA_200"][day])
-            if p_dic['Trending indicator'] == 'MA5/20':
-                eq.set_MA_5(ti_df["MA_5"][day])
-                eq.set_MA_20(ti_df["MA_20"][day])
+            custom_dic['TA indicator'] = ta_indicator
+            custom_dic['Trading signal long'] = trading_signal_long
+            custom_dic['Trading signal short'] = trading_signal_short
+            custom_dic[s_DI_minus] = ti_df[s_DI_minus][day]
+            custom_dic[s_ADX] = ti_df[s_ADX][day]
+            if p_dic['Trending indicator'] == 'SMA':
+                custom_dic[s_SMA_fast] = ti_df[s_SMA_fast][day]
+                custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
             if p_dic['Non-trending indicator'] == 'STOCH-S':
-                eq.set_STOCH_S(ti_df["STOCH_K_10_3_3"][day], ti_df["STOCH_D_10_3_3"][day])
-                eq.set_DI_positive(ti_df["DI_plus_14"][day])
+                custom_dic[s_STOCH_K] = ti_df[s_STOCH_K][day]
+                custom_dic[s_STOCH_D] = ti_df[s_STOCH_D][day]
+                custom_dic[s_DI_plus] = ti_df[s_DI_plus][day]
 
-        [ot, pt_long, pt_short] = alg.manage_orders_positions(p_dic, eq, ta_indicator, trading_signal_long, trading_signal_short, stock_ds, day)
-
-    return [ot, pt_long, pt_short]
+    return custom_dic

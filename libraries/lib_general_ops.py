@@ -114,13 +114,13 @@ def get_previous_date(dataset, date_obj):
     :return date_obj:
     """
     try:
-        return pd.to_datetime(dataset[:date_obj].tail(2).index).date
+        return pd.to_datetime(dataset[:date_obj].tail(2).index).date[0]
     except:
         print("Could not find previous day (%s) in dataset.")
         return None
 
 
-def increment_date(dataset, current_date_obj, n_days=1):
+def get_next_date(dataset, current_date_obj, n_days=1):
     """
     Function that increments the current date
     :param dataset, current_date_obj:
@@ -130,10 +130,9 @@ def increment_date(dataset, current_date_obj, n_days=1):
     new_date = current_date_obj + dt.timedelta(days=n_days)
     test = True
     while test and last_date - new_date >= dt.timedelta(days=0):
-        try:
-            dataset[new_date] # try to access that element in the dataset. If element is not there it will cause a KeyError
+        if new_date in dataset.index:
             test = False
-        except KeyError:
+        else:
             new_date = new_date + dt.timedelta(days=1)
     return new_date
 

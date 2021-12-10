@@ -8,7 +8,7 @@ exec_params:
     Equities DB connection parameters file: YFINANCE_inputs.yaml
     Start date:
     End date:
-    Last N days: 10
+    Last N days: 100
     Algorithm name: algorithm_1
 
 Equities connection parameters:
@@ -34,12 +34,16 @@ filter_params:
 algorithm_1_params:
     Apply filters: True
     Filters list: [dataset_size, dataset_old, turnover, price]
-    Trending indicator: MA5/20
+    ADX period: 14
+    Trending indicator: SMA
+    Trending indicator parameters: (5, 20)
     Non-trending indicator: STOCH-S
+    Non-trending indicator parameters: (10, 3, 3)
     Trending threshold: 25
     STOCH-S Oversold: 20
     STOCH-S Overbought: 80
-    MT trend TA indicator: MA50
+    MT trend TA indicator: SMA
+    MT trend TA indicator period: 50
 
 psi20: ['ALTR', 'COR', 'BCP', 'CTT', 'EDP', 'EDPR','RAM', 'GALP', 'IBS','JMT', 'EGL','NOS','PHR','RENE','SEM','SONC','SON','NVG']
 
