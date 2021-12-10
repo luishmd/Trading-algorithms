@@ -107,17 +107,23 @@ def get_first_date(dataset):
     return pd.to_datetime(dataset.head(1).index).date
 
 
-def get_previous_date(dataset, date_obj):
+def get_previous_date(dataset, current_date_obj, n_days=1):
     """
     Function that returns the previous date
     :param dataset, date_obj:
     :return date_obj:
     """
-    try:
-        return pd.to_datetime(dataset[:date_obj].tail(2).index).date[0]
-    except:
-        print("Could not find previous day (%s) in dataset.")
-        return None
+    first_date = get_first_date(dataset)
+    new_date = current_date_obj - dt.timedelta(days=n_days)
+    test = True
+    while test and new_date - first_date > dt.timedelta(days=0):
+        if new_date in dataset.index:
+            test = False
+        else:
+            new_date = new_date - dt.timedelta(days=1)
+    if new_date - first_date <= dt.timedelta(days=-1):
+        new_date = first_date
+    return new_date
 
 
 def get_next_date(dataset, current_date_obj, n_days=1):
@@ -142,9 +148,9 @@ def get_analysis_time_interval(dataset, date_format, start_date=None, end_date=N
     try:
         [sdate, edate] = get_dataset_time_interval(dataset)
         if start_date != None:
-            sdate = dt.datetime.strptime(start_date, date_format).date()
+            sdate = dt.datetime.strptime(str(start_date), date_format).date()
         if end_date != None:
-            edate = dt.datetime.strptime(end_date, date_format).date()
+            edate = dt.datetime.strptime(str(end_date), date_format).date()
         if last_n_points != None:
             sdate = pd.to_datetime(dataset.tail(last_n_points).index).date[0]
         return [sdate, edate]
@@ -154,8 +160,8 @@ def get_analysis_time_interval(dataset, date_format, start_date=None, end_date=N
 
 
 def get_dataset_time_interval(dataset):
-    start_date = get_first_date(dataset)
-    end_date = get_last_date(dataset)
+    start_date = get_first_date(dataset)[0]
+    end_date = get_last_date(dataset)[0]
     return [start_date, end_date]
 
 
@@ -173,12 +179,13 @@ def check_validity(dataset, date):
 def has_crossed(fast_older_val, fast_newer_val, slow_older_val, slow_newer_val):
     cross_test = False
     direction = ''
-    if (fast_newer_val - slow_newer_val)*(fast_older_val - slow_older_val) < 0:
-        cross_test = True
-        if (fast_newer_val - slow_newer_val) > 0:
-            direction = '+'
-        else:
-            direction = '-'
+    if isinstance(fast_older_val, float) and isinstance(fast_newer_val, float) and isinstance(slow_older_val, float) and isinstance(slow_newer_val, float):
+        if (fast_newer_val - slow_newer_val)*(fast_older_val - slow_older_val) < 0:
+            cross_test = True
+            if (fast_newer_val - slow_newer_val) > 0:
+                direction = '+'
+            else:
+                direction = '-'
     return [cross_test, direction]
 
 

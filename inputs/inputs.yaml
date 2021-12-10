@@ -1,15 +1,15 @@
 # For a description of each parameter and their units of measurement, please check the README.md.
 
 exec_params:
-    Mode: Analysis
+    Mode: Backtesting
     Run algorithm: True
-    Output template: output_algorithm_1_template.xlsx
+    Output template: output_template.xlsx
     Equities list: ["BCP.LS"]
     Equities DB connection parameters file: YFINANCE_inputs.yaml
     Start date:
     End date:
-    Last N days: 100
-    Algorithm name: algorithm_1
+    Last N days:
+    Algorithm name: algorithm_SMA
 
 Equities connection parameters:
     host: localhost
@@ -44,6 +44,12 @@ algorithm_1_params:
     STOCH-S Overbought: 80
     MT trend TA indicator: SMA
     MT trend TA indicator period: 50
+
+algorithm_SMA_params:
+    Apply filters: True
+    Filters list: [dataset_size, dataset_old, turnover, price]
+    SMA fast period: 5
+    SMA slow period: 20
 
 psi20: ['ALTR', 'COR', 'BCP', 'CTT', 'EDP', 'EDPR','RAM', 'GALP', 'IBS','JMT', 'EGL','NOS','PHR','RENE','SEM','SONC','SON','NVG']
 

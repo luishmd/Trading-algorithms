@@ -123,14 +123,8 @@ def main(p_dic):
         p_dic['Excel output file'] = output_file
         assert r != None
 
-        # Open output file and write parameters
-        wb = lib_excel.open_workbook(p_dic['Excel output file'])
-        lib_write.write_results_to_excel(p_dic, wb, write_params=True, write_table=False)
-        lib_excel.save_workbook(wb, output_file)
-        assert wb != None
-
         # Initialise tables manager
-        Mngr = Trading_Manager(p_dic)
+        mngr = Trading_Manager(p_dic)
 
         # For every stock...
         n_total_stocks = len(p_dic['Equities list'])
@@ -212,22 +206,17 @@ def main(p_dic):
 
                                 # Manage orders and positions
                                 if custom_dic:
-                                    Mngr.manage_orders_positions(p_dic, custom_dic, eq, curr_date)
+                                    mngr.manage_orders_positions(custom_dic, eq, curr_date)
 
                                 # Increment current date
-                                print(curr_date)
                                 curr_date = eq.get_next_day(curr_date)
 
                 del eq
 
         # Write results
-        #if p_dic['Mode'] == 'Analysis' or p_dic['Mode'] == 'Backtesting':
-        #    lib_write.write_results_to_excel(p_dic, wb, ot, write_params=False, write_table=True)
-        #lib_excel.save_workbook(wb, output_file)
-        # Close necessary files
-        wb.close()
+        mngr.write_results()
 
-        del Mngr
+        del mngr
 
         # Statistics
         if n_total_stocks > 0:

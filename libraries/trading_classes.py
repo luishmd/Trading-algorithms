@@ -13,6 +13,8 @@ import math
 import lib_general_ops
 import talib
 import pandas as pd
+import lib_trading_print_results as lib_write
+import lib_excel_ops_openpyxl as lib_excel
 
 #----------------------------------------------------------------------------------------
 # CLASSES
@@ -276,7 +278,6 @@ class Position(object):
             self.profit_losses = self.money_exit - self.money_entry
         else: # short
             self.profit_losses = -(self.money_exit - self.money_entry)
-
         self.profit_losses_pct = self.profit_losses/self.money_entry*100
         return None
 
@@ -389,6 +390,7 @@ class Trading_Manager(object):
     """Creates a Trading_Manager class"""
     def __init__(self, params_dic):
         # For analysis
+        self.p_dic = params_dic
         if params_dic['Mode'] == 'Analysis':
             self.ot = Orders_table("Orders")
         # For backtesting
@@ -400,43 +402,63 @@ class Trading_Manager(object):
         self.value_typical_trade = params_dic['Typical trade value']
         self.commission_value = params_dic['Commission per trade']
 
-    def manage_orders_positions(self, params_dic, custom_dic, stock_obj, day):
+    def manage_orders_positions(self, custom_dic, stock_obj, day):
         price = stock_obj.get_dataset()['Close'][day]
-        if params_dic['Mode'] == 'Analysis':
+        if self.p_dic['Mode'] == 'Analysis':
             # Long
             if custom_dic['Trading signal long'] == 'buy':
-                stop_loss = price * (1.0 - params_dic['Max losses pct'] / 100.0)
+                stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
                 self.ot.create_order(custom_dic, stock_obj, 'long', 'buy', day, price, stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
             if custom_dic['Trading signal long'] == 'sell':
                 self.ot.create_order(custom_dic, stock_obj, 'long', 'sell', day, price, money_typical_trade=self.value_typical_trade)
 
             # Short
-            if not params_dic['Only long positions']:
+            if not self.p_dic['Only long positions']:
                 if custom_dic['Trading signal short'] == 'buy':
-                    stop_loss = price * (1.0 + params_dic['Max losses pct'] / 100.0)
+                    stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
                     self.ot.create_order(custom_dic, stock_obj, 'short', 'buy', day, price, stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
                 if custom_dic['Trading signal short'] == 'sell':
-                    self.ot.create_order(stock_obj, 'short', 'sell', day, price)
+                    self.ot.create_order(custom_dic, stock_obj, 'short', 'sell', day, price)
 
-        if (params_dic['Mode'] == 'Backtesting') or (params_dic['Mode'] == 'Optimization'):
+        if (self.p_dic['Mode'] == 'Backtesting') or (self.p_dic['Mode'] == 'Optimization'):
             # Long
-            if stock_obj.get_name() not in self.pt_long.keys():
-                self.pt_long[stock_obj.get_name()] = Positions_table(stock_obj, 'long')
-            self.pt_long[stock_obj.get_name()].check_stop_loss(stock_obj, 'Stop loss', day, price)
+            k = stock_obj.get_name() + '-long'
+            if k not in self.pt_long.keys():
+                self.pt_long[k] = Positions_table(stock_obj, 'long')
+            self.pt_long[k].check_stop_loss(custom_dic, stock_obj, day, price)
             if custom_dic['Trading signal long'] == 'buy':
-                stop_loss = price * (1.0 - params_dic['Max losses pct'] / 100.0)
-                self.pt_long[stock_obj.get_name()].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+                stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
+                self.pt_long[k].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
             if custom_dic['Trading signal long'] == 'sell':
-                self.pt_long[stock_obj.get_name()].close_opened_positions(custom_dic, stock_obj, 'long', date_obj_exit=day, price_exit=price)
+                self.pt_long[k].close_opened_positions(custom_dic, stock_obj, 'long', date_obj_exit=day, price_exit=price)
 
             # Short
-            if not params_dic['Only long positions']:
-                if stock_obj.get_name() not in self.pt_short.keys():
-                    self.pt_short[stock_obj.get_name()] = Positions_table(stock_obj, 'short')
-                self.pt_short[stock_obj.get_name()].check_stop_loss(stock_obj, 'Stop loss', day, price)
+            k = stock_obj.get_name() + '-short'
+            if not self.p_dic['Only long positions']:
+                if k not in self.pt_short.keys():
+                    self.pt_short[k] = Positions_table(stock_obj, 'short')
+                self.pt_short[k].check_stop_loss(custom_dic, stock_obj, day, price)
                 if custom_dic['Trading signal short'] == 'buy':
-                    stop_loss = price * (1.0 + params_dic['Max losses pct'] / 100.0)
-                    self.pt_short[stock_obj.get_name()].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+                    stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
+                    self.pt_short[k].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
                 if custom_dic['Trading signal short'] == 'sell':
-                    self.pt_short[stock_obj.get_name()].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
-        return 0
+                    self.pt_short[k].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
+
+    def write_results(self, write_results=True):
+        if write_results:
+            wb = lib_excel.open_workbook(self.p_dic['Excel output file'])
+            assert wb
+            output_file = self.p_dic['Excel output file']
+            table = None
+            if self.p_dic['Mode'] == 'Analysis':
+                table = self.ot
+            if (self.p_dic['Mode'] == 'Backtesting') or (self.p_dic['Mode'] == 'Optimization'):
+                table = self.pt_long
+                if not self.p_dic['Only long positions']:
+                    for k in self.pt_short.keys():
+                        table[k] = self.pt_short[k]
+            if table:
+                lib_write.write_results_to_excel(self.p_dic, wb, table, write_params=True, write_table=True)
+                lib_excel.save_workbook(wb, output_file)
+            # Close necessary files
+            wb.close()
