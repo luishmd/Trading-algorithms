@@ -63,6 +63,14 @@ class Stock(object):
             self.ti_df[s] = talib.SMA(self.history_df['Low'], p)
         return self.ti_df[s]
 
+    def get_MACD(self, fast_period=12, slow_period=26, signal_period=9):
+        s_MACD = "MACD_{}_{}".format(str(fast_period),str(slow_period))
+        s_signal = "MACD_signal_{}".format(str(signal_period))
+        s_hist = "MACD_hist"
+        if s_MACD not in self.ti_df.columns:
+            self.ti_df[s_MACD], self.ti_df[s_signal], self.ti_df[s_hist] = talib.MACD(self.history_df['Close'], fast_period, slow_period, signal_period)
+        return self.ti_df[s_MACD], self.ti_df[s_signal], self.ti_df[s_hist]
+
     def get_RSI(self, p=14):
         s = "RSI_{}".format(str(p))
         if s not in self.ti_df.columns:

@@ -129,7 +129,6 @@ def algorithm_1(p_dic, eq, day):
 
 def algorithm_SMA(p_dic, eq, day):
     # Get technical indicators
-    # Get technical indicators
     ti_df = eq.get_technical_indicators()
     p_fast = p_dic["SMA fast period"]
     p_slow = p_dic["SMA slow period"]
@@ -148,7 +147,6 @@ def algorithm_SMA(p_dic, eq, day):
         # Determine buy and sell signals
         trading_signal_long = ''
         trading_signal_short = ''
-        # if trending
         [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df[s_SMA_fast][previous_day], ti_df[s_SMA_fast][day], ti_df[s_SMA_slow][previous_day], ti_df[s_SMA_slow][day])
 
         if cross_test and cross_direction == '+':
@@ -165,5 +163,55 @@ def algorithm_SMA(p_dic, eq, day):
             custom_dic['Trading signal short'] = trading_signal_short
             custom_dic[s_SMA_fast] = ti_df[s_SMA_fast][day]
             custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
+
+    return custom_dic
+
+
+def algorithm_SMA_MACD(p_dic, eq, day):
+    # Get technical indicators
+    ti_df = eq.get_technical_indicators()
+    p_fast = p_dic["SMA fast period"]
+    p_slow = p_dic["SMA slow period"]
+    s_SMA_fast = "SMA_{}".format(p_fast)
+    s_SMA_slow = "SMA_{}".format(p_slow)
+    ti_df[s_SMA_fast] = eq.get_SMA(int(p_fast))
+    ti_df[s_SMA_slow] = eq.get_SMA(int(p_slow))
+
+    p_fast = p_dic["MACD fast period"]
+    p_slow = p_dic["MACD slow period"]
+    p_signal = p_dic["MACD signal period"]
+    s_MACD = "MACD_{}_{}".format(p_fast, p_slow)
+    s_MACD_signal = "MACD_signal_{}".format(p_signal)
+    s_MACD_hist = "MACD_hist"
+    ti_df[s_MACD], ti_df[s_MACD_signal], ti_df[s_MACD_hist] = eq.get_MACD(int(p_fast), int(p_slow), int(p_signal))
+
+    # Initialise remaining variables
+    previous_day = eq.get_previous_day(day)
+    custom_dic = {}
+    nan_in_data = False
+
+    # Run algorithm
+    if not nan_in_data:
+        # Determine buy and sell signals
+        trading_signal_long = ''
+        trading_signal_short = ''
+        [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df[s_SMA_fast][previous_day], ti_df[s_SMA_fast][day], ti_df[s_SMA_slow][previous_day], ti_df[s_SMA_slow][day])
+
+        if cross_test and cross_direction == '+' and ti_df[s_MACD][day] > ti_df[s_MACD_signal][day]:
+            trading_signal_long = 'buy'
+            trading_signal_short = 'sell'
+
+        if cross_test and cross_direction == '-' and ti_df[s_MACD][day] < ti_df[s_MACD_signal][day]:
+            trading_signal_long = 'sell'
+            trading_signal_short = 'buy'
+
+        # Custom parameters
+        if cross_test:
+            custom_dic['Trading signal long'] = trading_signal_long
+            custom_dic['Trading signal short'] = trading_signal_short
+            custom_dic[s_SMA_fast] = ti_df[s_SMA_fast][day]
+            custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
+            custom_dic[s_MACD] = ti_df[s_MACD][day]
+            custom_dic[s_MACD_signal] = ti_df[s_MACD_signal][day]
 
     return custom_dic

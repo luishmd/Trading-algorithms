@@ -6,16 +6,16 @@ exec_params:
     Output template: output_template.xlsx
     Equities list: ["BCP.LS"]
     Equities DB connection parameters file: YFINANCE_inputs.yaml
-    Start date:
+    Start date: 2018-01-03
     End date:
-    Last N days: 1095
+    Last N days:
     Algorithm name: algorithm_SMA
 
 Equities connection parameters:
     host: localhost
     database: EQUITIES
     user: postgres
-    port: 5432
+    port: 5433
     password: remo123
 
 backtesting_params:
@@ -50,6 +50,15 @@ algorithm_SMA_params:
     Filters list: [dataset_size, dataset_old, turnover, price]
     SMA fast period: 5
     SMA slow period: 20
+
+algorithm_SMA_MACD_params:
+    Apply filters: True
+    Filters list: [dataset_size, dataset_old, turnover, price]
+    SMA fast period: 5
+    SMA slow period: 20
+    MACD fast period: 12
+    MACD slow period: 26
+    MACD signal period: 9
 
 psi20: ['ALTR', 'COR', 'BCP', 'CTT', 'EDP', 'EDPR','RAM', 'GALP', 'IBS','JMT', 'EGL','NOS','PHR','RENE','SEM','SONC','SON','NVG']
 
