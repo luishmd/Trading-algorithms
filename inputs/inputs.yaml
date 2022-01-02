@@ -5,18 +5,17 @@ exec_params:
     Run algorithm: True
     Output template: output_template.xlsx
     Equities list: ["BCP.LS"]
-    Equities DB connection parameters file: YFINANCE_inputs.yaml
+    Equities DB connection parameters file: YFINANCE_DB_inputs.yaml
     Start date: 2018-01-03
     End date:
     Last N days:
     Algorithm name: algorithm_SMA
 
-Equities connection parameters:
-    host: localhost
-    database: EQUITIES
-    user: postgres
-    port: 5433
-    password: remo123
+filter_params:
+    Min turnover: 400000
+    Max price: 2000
+    Min dataset size: 60
+    Max days since update: 100000000
 
 backtesting_params:
     Backtesting print positions: False
@@ -24,12 +23,6 @@ backtesting_params:
     Max losses pct: 10
     Typical trade value: 10000
     Commission per trade: 5
-
-filter_params:
-    Min turnover: 400000
-    Max price: 2000
-    Min dataset size: 60
-    Max days since update: 100000000
     
 algorithm_1_params:
     Apply filters: True
@@ -59,11 +52,3 @@ algorithm_SMA_MACD_params:
     MACD fast period: 12
     MACD slow period: 26
     MACD signal period: 9
-
-psi20: ['ALTR', 'COR', 'BCP', 'CTT', 'EDP', 'EDPR','RAM', 'GALP', 'IBS','JMT', 'EGL','NOS','PHR','RENE','SEM','SONC','SON','NVG']
-
-cac40: ['AC','Al','AiR','MT','ATO','CS','BNP','EN','CAP','CA','ACA','BN','ENGI','EINV','KER','OR','LHN','LR','MC','ML','ORA','RI','UG','PUBBS','RNO','SAF','SGO','SU','GLE','SW','SOLB','STM','TEC','FP','UL','FR','VIE','DG','VIV']
-
-bel20: ['ACKB','AGS','ABI','APAM','BPOST','COFB','COLR','ENGI','GLPG','GBLB','INGAT','KBC','ONTEX','PROX','SOF','SOLB','TNET','UBC','UMI']
-
-aex: ['AALB','ABN','AGN','AHT','AKZA','ATCT','MT','ASML','BOKA','DSM','GTO','HEIA','INGA','KPN','NN','PHIA','RAND','RELX','RDSBL','SBMO','UL','ULVRL','VPK','WKL']

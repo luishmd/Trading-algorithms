@@ -56,16 +56,20 @@ def get_p_dic(root_dir):
         input_file = lib_path_ops.join_paths(root_dir, 'inputs/inputs.yaml')
         with open(input_file, 'r') as ymlfile:
             cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
-
         filter_p_dic = cfg['filter_params']
         backtesting_p_dic = cfg['backtesting_params']
         exec_p_dic = cfg['exec_params']
-        eq_connection_p_dic = cfg['Equities connection parameters']
+
+        db_cred_file = lib_path_ops.join_paths(root_dir, 'inputs')
+        db_cred_file = lib_path_ops.join_paths(db_cred_file, exec_p_dic['Equities DB connection parameters file'])
+        db_cred_file = db_cred_file.replace('Trading algorithms', 'Data gathering')
+        with open(db_cred_file, 'r') as ymlfile:
+            db_cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+        eq_connection_p_dic = db_cfg['Connection parameters']
         print("Loaded inputs successfully.")
     except:
         print("Failed to load inputs. Exiting...")
         sys.exit(1)
-
 
     additional_p_dic = {
         "Excel output dir": lib_path_ops.join_paths(root_dir, 'outputs/'),
