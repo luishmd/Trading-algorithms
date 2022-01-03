@@ -117,18 +117,32 @@ def main(p_dic):
     """
     # Run algorithm
     if p_dic['Run algorithm']:
-        # Create results directory and create output file from template
-        dir_name = dt.datetime.now().strftime("%d%m%Y_%H%M%S")
+        # Create results directory and file (if single file)
+        dir_name = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         output_dir = lib_directory_ops.create_dir(p_dic['Excel output dir'], dir_name)
         assert output_dir != None
-        new_file = 'output_' + dir_name + '.xlsx'
-        output_file = lib_path_ops.join_paths(output_dir, new_file)
-        r = lib_file_ops.copy_file(p_dic['Excel template file'], output_file)
-        p_dic['Excel output file'] = output_file
-        assert r != None
 
-        # Initialise tables manager
-        mngr = Trading_Manager(p_dic)
+        create_file = False
+        out_prefix = ''
+        if p_dic['Mode'] == 'Analysis':
+            out_prefix = 'an'
+            create_file = True
+        elif p_dic['Mode'] == 'Backtesting' and p_dic['Output file mode'] == 'Single file':
+            out_prefix = 'btst'
+            create_file = True
+        elif p_dic['Mode'] == 'Optimization' and p_dic['Output file mode'] == 'Single file':
+            out_prefix = 'opt'
+            create_file = True
+
+        if create_file:
+            new_file = out_prefix + '_' + dir_name + '.xlsx'
+            output_file = lib_path_ops.join_paths(output_dir, new_file)
+            r = lib_file_ops.copy_file(p_dic['Excel template file'], output_file)
+            assert r != None
+            p_dic['Excel output file'] = output_file
+
+            # Initialise tables manager
+            mngr = Trading_Manager(p_dic)
 
         # For every stock...
         n_total_stocks = len(p_dic['Equities list'])
@@ -161,7 +175,7 @@ def main(p_dic):
                 history_df = history_df.set_index('Date')
                 assert not(history_df.empty)
 
-                eq = Stock(ticker_sname, history_df)
+                eq = Stock(ticker, ticker_sname, history_df)
 
                 # Determine start and end dates for analysis and dataset
                 [start_date_ds_obj, end_date_ds_obj] = lib_general_ops.get_dataset_time_interval(history_df)
@@ -181,13 +195,25 @@ def main(p_dic):
                 if analyze_ticker:
                     # Start analysis or Backtesting or Optimization....
                     n_stocks_analyzed = n_stocks_analyzed + 1
+                    out_prefix = ''
+                    create_file = False
                     if p_dic['Mode'] == 'Analysis':
                         print('{} is being analyzed...'.format(eq.get_name()))
+                        out_prefix = 'an'
                     if p_dic['Mode'] == 'Backtesting':
                         print('{} is being backtested...'.format(eq.get_name()))
+                        out_prefix = 'btst'
                     if p_dic['Mode'] == 'Optimization':
                         print('{} is being backtested through optimization...'.format(eq.get_name()))
+                        out_prefix = 'opt'
 
+                    if (p_dic['Mode'] == 'Backtesting' or p_dic['Mode'] == 'Optimization') and p_dic['Output file mode'] == 'Multiple files':
+                        new_file = out_prefix + '_' + eq.get_ticker().replace('.', '-') + '_' + dir_name + '.xlsx'
+                        output_file = lib_path_ops.join_paths(output_dir, new_file)
+                        r = lib_file_ops.copy_file(p_dic['Excel template file'], output_file)
+                        assert r != None
+                        p_dic['Excel output file'] = output_file
+                        mngr = Trading_Manager(p_dic)
 
                     [sdate, edate] = lib_general_ops.get_analysis_time_interval(eq.get_dataset(), date_format, start_date=p_dic['Start date'], end_date=p_dic['End date'], last_n_points=p_dic['Last N days'])
 
@@ -217,10 +243,15 @@ def main(p_dic):
 
                 del eq
 
-        # Write results
-        mngr.write_results()
+                # Write results
+                if (p_dic['Mode'] == 'Backtesting' or p_dic['Mode'] == 'Optimization') and p_dic['Output file mode'] == 'Multiple files':
+                    mngr.write_results()
+                    del mngr
 
-        del mngr
+        # Write results
+        if p_dic['Mode'] == 'Analysis' or p_dic['Output file mode'] == 'Single file':
+            mngr.write_results()
+            del mngr
 
         # Statistics
         if n_total_stocks > 0:

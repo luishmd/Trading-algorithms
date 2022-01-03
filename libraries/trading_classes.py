@@ -21,14 +21,18 @@ import lib_excel_ops_openpyxl as lib_excel
 #----------------------------------------------------------------------------------------
 class Stock(object):
     """ Creates a stock object """
-    def __init__(self, name, history_df):
+    def __init__(self, ticker, name, history_df):
         self.name = name
+        self.ticker = ticker
         self.history_df = history_df
         self.ti_df = pd.DataFrame(history_df.index)
         self.ti_df = self.ti_df.set_index('Date')
 
     def __str__(self):
         return "Stock: %s" % self.name
+
+    def get_ticker(self):
+        return self.ticker
 
     def get_name(self):
         return self.name
@@ -412,6 +416,9 @@ class Trading_Manager(object):
         self.value_typical_trade = params_dic['Typical trade value']
         self.commission_value = params_dic['Commission per trade']
 
+    def update_params_dic(self, p_dic):
+        self.p_dic = p_dic
+
     def manage_orders_positions(self, custom_dic, stock_obj, day):
         price = stock_obj.get_dataset()['Close'][day]
         if self.p_dic['Mode'] == 'Analysis':
@@ -454,11 +461,30 @@ class Trading_Manager(object):
                 if custom_dic['Trading signal short'] == 'sell':
                     self.pt_short[k].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
 
-    def write_results(self, write_results=True):
+    def write_results(self, write_results=True, delete_unused=True):
         if write_results:
             wb = lib_excel.open_workbook(self.p_dic['Excel output file'])
             assert wb
-            output_file = self.p_dic['Excel output file']
+            # Delete unused sheets
+            if delete_unused:
+                ws_list = wb.get_sheet_names()
+                if self.p_dic['Mode'] == 'Analysis':
+                    remove_list = ['Backtesting', 'Optimization']
+                    for r in remove_list:
+                        if r in ws_list:
+                            wb.remove_sheet(wb.get_sheet_by_name(r))
+                if self.p_dic['Mode'] == 'Backtesting':
+                    remove_list = ['Execution', 'Optimization']
+                    for r in remove_list:
+                        if r in ws_list:
+                            wb.remove_sheet(wb.get_sheet_by_name(r))
+                if self.p_dic['Mode'] == 'Optimization':
+                    remove_list = ['Execution', 'Backtesting']
+                    for r in remove_list:
+                        if r in ws_list:
+                            wb.remove_sheet(wb.get_sheet_by_name(r))
+
+            # Write results
             table = None
             if self.p_dic['Mode'] == 'Analysis':
                 table = self.ot
@@ -469,6 +495,7 @@ class Trading_Manager(object):
                         table[k] = self.pt_short[k]
             if table:
                 lib_write.write_results_to_excel(self.p_dic, wb, table, write_params=True, write_table=True)
+                output_file = self.p_dic['Excel output file']
                 lib_excel.save_workbook(wb, output_file)
             # Close necessary files
             wb.close()

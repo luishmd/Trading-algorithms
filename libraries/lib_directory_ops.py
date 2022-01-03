@@ -75,6 +75,28 @@ def create_dir(root_dir, dir_name):
     return d
 
 
+def exists_dir(dir_path):
+    """
+    Function that tests if a directory exists
+    :param dir_path: the path of the directory to tet
+    :return: boolean
+    """
+    return os.path.isdir(dir_path)
+
+
+def empty_dir(dir_path):
+    """
+    Function that tests if a directory is empty
+    :param dir_path: the path of the directory to tet
+    :return: boolean
+    """
+    t = True
+    if len(os.listdir(dir_path)) > 0:
+        t = False
+    return t
+
+
+
 #----------------------------------------------------------------------------------------
 # MAIN
 #----------------------------------------------------------------------------------------
