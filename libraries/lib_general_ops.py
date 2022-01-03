@@ -175,7 +175,6 @@ def check_validity(dataset, date):
     return valid
 
 
-
 def has_crossed(fast_older_val, fast_newer_val, slow_older_val, slow_newer_val):
     cross_test = False
     direction = ''
@@ -197,6 +196,14 @@ def contains_nan(values_list):
             break
     return test
 
+
+def is_number(s):
+    try:
+        float(s)
+        t = True
+    except:
+        t = False
+    return t
 
 #----------------------------------------------------------------------------------------
 # MAIN

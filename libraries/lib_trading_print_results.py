@@ -10,6 +10,7 @@ __author__ = "Luis Domingues"
 # IMPORTS
 #----------------------------------------------------------------------------------------
 import lib_excel_ops_openpyxl as lib_excel
+import lib_general_ops as lib_gen
 from openpyxl.styles import Font, Alignment
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from trading_classes import Stock
@@ -73,13 +74,24 @@ def write_data(params_dic, mngr_table, ws):
             st = order.get_stock()
             id = row_i - 8 + 1
             ws.cell(row=row_i, column=1, value=id)
+            c.alignment = Alignment(horizontal='center')
             ws.cell(row=row_i, column=2, value=order.get_name())
+            c.alignment = Alignment(horizontal='left')
             ws.cell(row=row_i, column=3, value=order.get_position_type())
+            c.alignment = Alignment(horizontal='center')
             ws.cell(row=row_i, column=4, value=order.get_order_type())
+            c.alignment = Alignment(horizontal='center')
             ws.cell(row=row_i, column=5, value=order.get_amount())
+            c.number_format = '0'
+            c.alignment = Alignment(horizontal='right')
             ws.cell(row=row_i, column=6, value=order.get_stop_loss())
+            c.number_format = '0.0000'
+            c.alignment = Alignment(horizontal='right')
             ws.cell(row=row_i, column=7, value=order.get_date())
+            c.alignment = Alignment(horizontal='center')
             ws.cell(row=row_i, column=8, value=order.get_price())
+            c.number_format = '0.00'
+            c.alignment = Alignment(horizontal='right')
             i = 0
             c_dic = order.get_custom()
             for c in c_dic.keys():
@@ -87,7 +99,12 @@ def write_data(params_dic, mngr_table, ws):
                 w = ws.cell(row=7, column=9+i, value=c)
                 w.font = ft
                 w.alignment = al
-                ws.cell(row=row_i, column=9+i, value=c_dic[c])
+                w = ws.cell(row=row_i, column=9+i, value=c_dic[c])
+                if lib_gen.is_number(c_dic[c]):
+                    w.number_format = '0.000000'
+                    w.alignment = Alignment(horizontal='right')
+                else:
+                    w.alignment = Alignment(horizontal='center')
                 i += 1
             row_i = row_i + 1
         #xl_tab = Table(displayName='Tbl', ref="A7:L13")
@@ -104,14 +121,25 @@ def write_data(params_dic, mngr_table, ws):
             ws.cell(row=4, column=2, value=mngr_table[k].get_profit_losses_pct())
             for position in positions_list:
                 id = row_i - 8 + 1
-                ws.cell(row=row_i, column=1, value=id)
-                ws.cell(row=row_i, column=2, value=position.get_name())
-                ws.cell(row=row_i, column=3, value=position.get_position_type())
-                ws.cell(row=row_i, column=4, value=position.get_state())
-                ws.cell(row=row_i, column=5, value=position.get_amount())
-                ws.cell(row=row_i, column=6, value=position.get_stop_loss())
-                ws.cell(row=row_i, column=7, value=position.get_date_entry())
-                ws.cell(row=row_i, column=8, value=position.get_price_entry())
+                c = ws.cell(row=row_i, column=1, value=id)
+                c.alignment = Alignment(horizontal='center')
+                c = ws.cell(row=row_i, column=2, value=position.get_name())
+                c.alignment = Alignment(horizontal='left')
+                c = ws.cell(row=row_i, column=3, value=position.get_position_type())
+                c.alignment = Alignment(horizontal='center')
+                c = ws.cell(row=row_i, column=4, value=position.get_state())
+                c.alignment = Alignment(horizontal='center')
+                c = ws.cell(row=row_i, column=5, value=position.get_amount())
+                c.number_format = '0'
+                c.alignment = Alignment(horizontal='center')
+                c = ws.cell(row=row_i, column=6, value=position.get_stop_loss())
+                c.number_format = '0.0000'
+                c.alignment = Alignment(horizontal='right')
+                c = ws.cell(row=row_i, column=7, value=position.get_date_entry())
+                c.alignment = Alignment(horizontal='center')
+                c = ws.cell(row=row_i, column=8, value=position.get_price_entry())
+                c.number_format = '0.00'
+                c.alignment = Alignment(horizontal='right')
                 i = 0
                 c_dic = position.get_custom_entry()
                 for c in c_dic.keys():
@@ -119,22 +147,43 @@ def write_data(params_dic, mngr_table, ws):
                     w = ws.cell(row=7, column=15+i, value=c)
                     w.font = ft
                     w.alignment = al
-                    ws.cell(row=row_i, column=15+i, value=c_dic[c])
+                    w = ws.cell(row=row_i, column=15+i, value=c_dic[c])
+                    if lib_gen.is_number(c_dic[c]):
+                        w.number_format = '0.0000'
+                        w.alignment = Alignment(horizontal='right')
+                    else:
+                        w.alignment = Alignment(horizontal='center')
                     i += 1
                 if position.get_state() == 'closed':
-                    ws.cell(row=row_i, column=9, value=position.get_date_exit())
-                    ws.cell(row=row_i, column=10, value=position.get_price_exit())
-                    ws.cell(row=row_i, column=11, value=position.get_money_entry())
-                    ws.cell(row=row_i, column=12, value=position.get_money_exit())
-                    ws.cell(row=row_i, column=13, value=position.get_profit_losses())
-                    ws.cell(row=row_i, column=14, value=position.get_profit_losses_pct())
+                    c = ws.cell(row=row_i, column=9, value=position.get_date_exit())
+                    c.alignment = Alignment(horizontal='center')
+                    c = ws.cell(row=row_i, column=10, value=position.get_price_exit())
+                    c.number_format = '0.00'
+                    c.alignment = Alignment(horizontal='right')
+                    c = ws.cell(row=row_i, column=11, value=position.get_money_entry())
+                    c.number_format = '0.00'
+                    c.alignment = Alignment(horizontal='right')
+                    c = ws.cell(row=row_i, column=12, value=position.get_money_exit())
+                    c.number_format = '0.00'
+                    c.alignment = Alignment(horizontal='right')
+                    c = ws.cell(row=row_i, column=13, value=position.get_profit_losses())
+                    c.number_format = '0.00'
+                    c.alignment = Alignment(horizontal='right')
+                    c = ws.cell(row=row_i, column=14, value=position.get_profit_losses_pct())
+                    c.number_format = '0.0'
+                    c.alignment = Alignment(horizontal='right')
                     c_dic = position.get_custom_exit()
                     for c in c_dic.keys():
                         ws.cell(row=6, column=15 + i, value='python')
                         w = ws.cell(row=7, column=15 + i, value=c)
                         w.font = ft
                         w.alignment = al
-                        ws.cell(row=row_i, column=15 + i, value=c_dic[c])
+                        w = ws.cell(row=row_i, column=15 + i, value=c_dic[c])
+                        if lib_gen.is_number(c_dic[c]):
+                            w.number_format = '0.000000'
+                            w.alignment = Alignment(horizontal='right')
+                        else:
+                            w.alignment = Alignment(horizontal='center')
                         i += 1
                 row_i = row_i + 1
 
