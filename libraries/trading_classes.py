@@ -381,6 +381,19 @@ class Positions_table(object):
         self.total_money_entry = total_money_entry
         return total_money_entry
 
+    def get_number_positions(self, Only_closed_positions=True):
+        i = 0
+        for position in self.positions_list:
+            if position.get_state() == 'closed' or not Only_closed_positions:
+                i += 1
+        return i
+
+    def get_average_money_entry(self, Only_closed_positions=True):
+        total_money_entry = self.get_total_money_entry(Only_closed_positions=Only_closed_positions)
+        num_positions = self.get_number_positions(Only_closed_positions=Only_closed_positions)
+        avg_money_entry = float(total_money_entry) / float(num_positions)
+        return avg_money_entry
+
     def get_profit_losses(self, Only_closed_positions=True):
         total_profit_losses = 0
         for position in self.positions_list:
@@ -389,11 +402,11 @@ class Positions_table(object):
         self.total_profit_losses = total_profit_losses
         return total_profit_losses
 
-    def get_profit_losses_pct(self):
-        total_profit_losses = self.get_profit_losses()
-        total_money_entry = self.get_total_money_entry()
+    def get_profit_losses_pct(self, Only_closed_positions=True):
+        total_profit_losses = self.get_profit_losses(Only_closed_positions=Only_closed_positions)
+        avg_money_entry = self.get_average_money_entry(Only_closed_positions=Only_closed_positions)
         try:
-            total_profit_losses_pct = float(total_profit_losses)/float(total_money_entry) * 100
+            total_profit_losses_pct = float(total_profit_losses)/float(avg_money_entry) * 100
         except ZeroDivisionError:
             total_profit_losses_pct = 0
         self.total_profit_losses_pct = total_profit_losses_pct
@@ -415,9 +428,6 @@ class Trading_Manager(object):
 
         self.value_typical_trade = params_dic['Typical trade value']
         self.commission_value = params_dic['Commission per trade']
-
-    def update_params_dic(self, p_dic):
-        self.p_dic = p_dic
 
     def manage_orders_positions(self, custom_dic, stock_obj, day):
         price = stock_obj.get_dataset()['Close'][day]

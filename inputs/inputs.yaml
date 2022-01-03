@@ -10,7 +10,7 @@ exec_params:
     Start date: 2018-01-03
     End date:
     Last N days:
-    Algorithm name: algorithm_SMA
+    Algorithm name: algorithm_SMA_MACD
 
 filter_params:
     Min turnover: 400000
