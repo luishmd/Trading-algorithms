@@ -84,13 +84,13 @@ def algorithm_1(p_dic, eq, day):
 
             if cross_test and cross_direction == '+' and ('+' in medium_term_trend):
                 ta_indicator = p_dic['Trending indicator']
-                trading_signal_long = 'buy'
-                trading_signal_short = 'sell'
+                trading_signal_long = 'buy - SMA'
+                trading_signal_short = 'sell - SMA'
 
             if cross_test and cross_direction == '-' and ('-' in medium_term_trend):
                 ta_indicator = p_dic['Trending indicator']
-                trading_signal_long = 'sell'
-                trading_signal_short = 'buy'
+                trading_signal_long = 'sell - SMA'
+                trading_signal_short = 'buy - SMA'
 
         # if not trending
         if trend == 0:
@@ -101,19 +101,20 @@ def algorithm_1(p_dic, eq, day):
 
             if cross_test and cross_direction == '+' and (ti_df[s_STOCH_K][day] < p_dic["STOCH-S Oversold"] or (ti_df[s_STOCH_D][day]) < p_dic["STOCH-S Oversold"]):
                 ta_indicator = p_dic['Non-trending indicator']
-                trading_signal_long = 'buy'
-                trading_signal_short = 'sell'
+                trading_signal_long = 'buy - STOCH-S'
+                trading_signal_short = 'sell - STOCH-S'
 
             if cross_test and cross_direction == '-' and (ti_df[s_STOCH_K][day] > p_dic["STOCH-S Overbought"] or (ti_df[s_STOCH_D][day]) > p_dic["STOCH-S Overbought"]) :
                 ta_indicator = p_dic['Non-trending indicator']
-                trading_signal_long = 'sell'
-                trading_signal_short = 'buy'
+                trading_signal_long = 'sell - STOCH-S'
+                trading_signal_short = 'buy - STOCH-S'
 
         # Custom parameters
         if cross_test:
             custom_dic['TA indicator'] = ta_indicator
             custom_dic['Trading signal long'] = trading_signal_long
-            custom_dic['Trading signal short'] = trading_signal_short
+            if not p_dic['Only long positions']:
+                custom_dic['Trading signal short'] = trading_signal_short
             custom_dic[s_DI_minus] = ti_df[s_DI_minus][day]
             custom_dic[s_ADX] = ti_df[s_ADX][day]
             if p_dic['Trending indicator'] == 'SMA':
@@ -150,17 +151,18 @@ def algorithm_SMA(p_dic, eq, day):
         [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df[s_SMA_fast][previous_day], ti_df[s_SMA_fast][day], ti_df[s_SMA_slow][previous_day], ti_df[s_SMA_slow][day])
 
         if cross_test and cross_direction == '+':
-            trading_signal_long = 'buy'
-            trading_signal_short = 'sell'
+            trading_signal_long = 'buy - SMA'
+            trading_signal_short = 'sell - SMA'
 
         if cross_test and cross_direction == '-':
-            trading_signal_long = 'sell'
-            trading_signal_short = 'buy'
+            trading_signal_long = 'sell - SMA'
+            trading_signal_short = 'buy - SMA'
 
         # Custom parameters
         if cross_test:
             custom_dic['Trading signal long'] = trading_signal_long
-            custom_dic['Trading signal short'] = trading_signal_short
+            if not p_dic['Only long positions']:
+                custom_dic['Trading signal short'] = trading_signal_short
             custom_dic[s_SMA_fast] = ti_df[s_SMA_fast][day]
             custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
 
@@ -198,17 +200,18 @@ def algorithm_SMA_MACD(p_dic, eq, day):
         [cross_test, cross_direction] = lib_general_ops.has_crossed(ti_df[s_SMA_fast][previous_day], ti_df[s_SMA_fast][day], ti_df[s_SMA_slow][previous_day], ti_df[s_SMA_slow][day])
 
         if cross_test and cross_direction == '+' and ti_df[s_MACD][day] > ti_df[s_MACD_signal][day]:
-            trading_signal_long = 'buy'
-            trading_signal_short = 'sell'
+            trading_signal_long = 'buy - SMA'
+            trading_signal_short = 'sell - SMA'
 
         if cross_test and cross_direction == '-' and ti_df[s_MACD][day] < ti_df[s_MACD_signal][day]:
-            trading_signal_long = 'sell'
-            trading_signal_short = 'buy'
+            trading_signal_long = 'sell - SMA'
+            trading_signal_short = 'buy - SMA'
 
         # Custom parameters
         if cross_test:
             custom_dic['Trading signal long'] = trading_signal_long
-            custom_dic['Trading signal short'] = trading_signal_short
+            if not p_dic['Only long positions']:
+                custom_dic['Trading signal short'] = trading_signal_short
             custom_dic[s_SMA_fast] = ti_df[s_SMA_fast][day]
             custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
             custom_dic[s_MACD] = ti_df[s_MACD][day]

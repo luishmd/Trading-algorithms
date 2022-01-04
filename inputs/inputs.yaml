@@ -11,6 +11,7 @@ exec_params:
     End date:
     Last N days:
     Algorithm name: algorithm_SMA_MACD
+    Only long positions: True
 
 filter_params:
     Min turnover: 400000
@@ -20,7 +21,6 @@ filter_params:
 
 backtesting_params:
     Backtesting print positions: False
-    Only long positions: True
     Max losses pct: 10
     Typical trade value: 10000
     Commission per trade: 5

@@ -391,7 +391,10 @@ class Positions_table(object):
     def get_average_money_entry(self, Only_closed_positions=True):
         total_money_entry = self.get_total_money_entry(Only_closed_positions=Only_closed_positions)
         num_positions = self.get_number_positions(Only_closed_positions=Only_closed_positions)
-        avg_money_entry = float(total_money_entry) / float(num_positions)
+        if float(num_positions) > 0:
+            avg_money_entry = float(total_money_entry) / float(num_positions)
+        else:
+            avg_money_entry = 0
         return avg_money_entry
 
     def get_profit_losses(self, Only_closed_positions=True):
@@ -433,18 +436,18 @@ class Trading_Manager(object):
         price = stock_obj.get_dataset()['Close'][day]
         if self.p_dic['Mode'] == 'Analysis':
             # Long
-            if custom_dic['Trading signal long'] == 'buy':
+            if 'buy' in custom_dic['Trading signal long'].lower():
                 stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
                 self.ot.create_order(custom_dic, stock_obj, 'long', 'buy', day, price, stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
-            if custom_dic['Trading signal long'] == 'sell':
+            if 'sell' in custom_dic['Trading signal long'].lower():
                 self.ot.create_order(custom_dic, stock_obj, 'long', 'sell', day, price, money_typical_trade=self.value_typical_trade)
 
             # Short
             if not self.p_dic['Only long positions']:
-                if custom_dic['Trading signal short'] == 'buy':
+                if 'buy' in custom_dic['Trading signal short'].lower():
                     stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
                     self.ot.create_order(custom_dic, stock_obj, 'short', 'buy', day, price, stop_loss_price=stop_loss, money_typical_trade=self.value_typical_trade, commission_per_op=self.commission_value)
-                if custom_dic['Trading signal short'] == 'sell':
+                if 'sell' in custom_dic['Trading signal short'].lower():
                     self.ot.create_order(custom_dic, stock_obj, 'short', 'sell', day, price)
 
         if (self.p_dic['Mode'] == 'Backtesting') or (self.p_dic['Mode'] == 'Optimization'):
@@ -453,10 +456,10 @@ class Trading_Manager(object):
             if k not in self.pt_long.keys():
                 self.pt_long[k] = Positions_table(stock_obj, 'long')
             self.pt_long[k].check_stop_loss(custom_dic, stock_obj, day, price)
-            if custom_dic['Trading signal long'] == 'buy':
+            if 'buy' in custom_dic['Trading signal long'].lower():
                 stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
                 self.pt_long[k].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
-            if custom_dic['Trading signal long'] == 'sell':
+            if 'sell' in custom_dic['Trading signal long'].lower():
                 self.pt_long[k].close_opened_positions(custom_dic, stock_obj, 'long', date_obj_exit=day, price_exit=price)
 
             # Short
@@ -465,10 +468,10 @@ class Trading_Manager(object):
                 if k not in self.pt_short.keys():
                     self.pt_short[k] = Positions_table(stock_obj, 'short')
                 self.pt_short[k].check_stop_loss(custom_dic, stock_obj, day, price)
-                if custom_dic['Trading signal short'] == 'buy':
+                if 'buy' in custom_dic['Trading signal short'].lower():
                     stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
                     self.pt_short[k].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
-                if custom_dic['Trading signal short'] == 'sell':
+                if 'sell' in custom_dic['Trading signal short'].lower():
                     self.pt_short[k].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
 
     def write_results(self, write_results=True, delete_unused=True):

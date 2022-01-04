@@ -73,23 +73,23 @@ def write_data(params_dic, mngr_table, ws):
         for order in orders_list:
             st = order.get_stock()
             id = row_i - 8 + 1
-            ws.cell(row=row_i, column=1, value=id)
+            c = ws.cell(row=row_i, column=1, value=id)
             c.alignment = Alignment(horizontal='center')
-            ws.cell(row=row_i, column=2, value=order.get_name())
+            c = ws.cell(row=row_i, column=2, value=order.get_name())
             c.alignment = Alignment(horizontal='left')
-            ws.cell(row=row_i, column=3, value=order.get_position_type())
+            c = ws.cell(row=row_i, column=3, value=order.get_position_type())
             c.alignment = Alignment(horizontal='center')
-            ws.cell(row=row_i, column=4, value=order.get_order_type())
+            c = ws.cell(row=row_i, column=4, value=order.get_order_type())
             c.alignment = Alignment(horizontal='center')
-            ws.cell(row=row_i, column=5, value=order.get_amount())
+            c = ws.cell(row=row_i, column=5, value=order.get_amount())
             c.number_format = '0'
             c.alignment = Alignment(horizontal='right')
-            ws.cell(row=row_i, column=6, value=order.get_stop_loss())
+            c = ws.cell(row=row_i, column=6, value=order.get_stop_loss())
             c.number_format = '0.0000'
             c.alignment = Alignment(horizontal='right')
-            ws.cell(row=row_i, column=7, value=order.get_date())
+            c = ws.cell(row=row_i, column=7, value=order.get_date())
             c.alignment = Alignment(horizontal='center')
-            ws.cell(row=row_i, column=8, value=order.get_price())
+            c = ws.cell(row=row_i, column=8, value=order.get_price())
             c.number_format = '0.00'
             c.alignment = Alignment(horizontal='right')
             i = 0
