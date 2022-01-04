@@ -124,6 +124,7 @@ def algorithm_1(p_dic, eq, day):
                 custom_dic[s_STOCH_K] = ti_df[s_STOCH_K][day]
                 custom_dic[s_STOCH_D] = ti_df[s_STOCH_D][day]
                 custom_dic[s_DI_plus] = ti_df[s_DI_plus][day]
+            custom_dic['Stop Loss'] = ''
 
     return custom_dic
 
@@ -165,6 +166,7 @@ def algorithm_SMA(p_dic, eq, day):
                 custom_dic['Trading signal short'] = trading_signal_short
             custom_dic[s_SMA_fast] = ti_df[s_SMA_fast][day]
             custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
+            custom_dic['Stop Loss'] = ''
 
     return custom_dic
 
@@ -216,5 +218,6 @@ def algorithm_SMA_MACD(p_dic, eq, day):
             custom_dic[s_SMA_slow] = ti_df[s_SMA_slow][day]
             custom_dic[s_MACD] = ti_df[s_MACD][day]
             custom_dic[s_MACD_signal] = ti_df[s_MACD_signal][day]
+            custom_dic['Stop Loss'] = ''
 
     return custom_dic

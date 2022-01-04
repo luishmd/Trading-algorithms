@@ -7,7 +7,7 @@ exec_params:
     Output template: output_template.xlsx
     Equities list: ["BCP.LS", "EDP.LS"]
     Equities DB connection parameters file: YFINANCE_DB_inputs.yaml
-    Start date: 2018-01-03
+    Start date: 2020-02-04
     End date:
     Last N days:
     Algorithm name: algorithm_SMA_MACD

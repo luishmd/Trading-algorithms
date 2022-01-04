@@ -90,7 +90,7 @@ def write_data(params_dic, mngr_table, ws):
             c = ws.cell(row=row_i, column=7, value=order.get_date())
             c.alignment = Alignment(horizontal='center')
             c = ws.cell(row=row_i, column=8, value=order.get_price())
-            c.number_format = '0.00'
+            c.number_format = '0.0000'
             c.alignment = Alignment(horizontal='right')
             i = 0
             c_dic = order.get_custom()
@@ -138,13 +138,14 @@ def write_data(params_dic, mngr_table, ws):
                 c = ws.cell(row=row_i, column=7, value=position.get_date_entry())
                 c.alignment = Alignment(horizontal='center')
                 c = ws.cell(row=row_i, column=8, value=position.get_price_entry())
-                c.number_format = '0.00'
+                c.number_format = '0.0000'
                 c.alignment = Alignment(horizontal='right')
                 i = 0
                 c_dic = position.get_custom_entry()
                 for c in c_dic.keys():
                     ws.cell(row=6, column=15+i, value='python')
-                    w = ws.cell(row=7, column=15+i, value=c)
+                    k = c + ' entry'
+                    w = ws.cell(row=7, column=15+i, value=k)
                     w.font = ft
                     w.alignment = al
                     w = ws.cell(row=row_i, column=15+i, value=c_dic[c])
@@ -158,7 +159,7 @@ def write_data(params_dic, mngr_table, ws):
                     c = ws.cell(row=row_i, column=9, value=position.get_date_exit())
                     c.alignment = Alignment(horizontal='center')
                     c = ws.cell(row=row_i, column=10, value=position.get_price_exit())
-                    c.number_format = '0.00'
+                    c.number_format = '0.0000'
                     c.alignment = Alignment(horizontal='right')
                     c = ws.cell(row=row_i, column=11, value=position.get_money_entry())
                     c.number_format = '0.00'
@@ -175,7 +176,8 @@ def write_data(params_dic, mngr_table, ws):
                     c_dic = position.get_custom_exit()
                     for c in c_dic.keys():
                         ws.cell(row=6, column=15 + i, value='python')
-                        w = ws.cell(row=7, column=15 + i, value=c)
+                        k = c + ' exit'
+                        w = ws.cell(row=7, column=15 + i, value=k)
                         w.font = ft
                         w.alignment = al
                         w = ws.cell(row=row_i, column=15 + i, value=c_dic[c])
