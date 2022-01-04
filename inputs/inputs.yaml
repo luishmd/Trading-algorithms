@@ -7,10 +7,10 @@ exec_params:
     Output template: output_template.xlsx
     Equities list: ["BCP.LS", "EDP.LS"]
     Equities DB connection parameters file: YFINANCE_DB_inputs.yaml
-    Start date: 2020-02-04
+    Start date: 2018-01-03
     End date:
     Last N days:
-    Algorithm name: algorithm_SMA_MACD
+    Algorithm name: algorithm_MACD
     Only long positions: True
 
 filter_params:
@@ -23,7 +23,8 @@ backtesting_params:
     Backtesting print positions: False
     Max losses pct: 10
     Typical trade value: 10000
-    Commission per trade: 5
+    Commission per trade: 7.5
+    Only one open position: True
     
 algorithm_1_params:
     Apply filters: True
@@ -44,6 +45,13 @@ algorithm_SMA_params:
     Filters list: [dataset_size, dataset_old, turnover, price]
     SMA fast period: 5
     SMA slow period: 20
+
+algorithm_MACD_params:
+    Apply filters: True
+    Filters list: [dataset_size, dataset_old, turnover, price]
+    MACD fast period: 12
+    MACD slow period: 26
+    MACD signal period: 9
 
 algorithm_SMA_MACD_params:
     Apply filters: True

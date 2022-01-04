@@ -308,16 +308,16 @@ class Position(object):
             return None
 
     def check_stop_loss(self, custom_dic_exit, stock_obj, date_obj, price):
-        trade_closed = False
+        stop_loss_trigger = False
         if (self.position_type == 'long') and (price <= self.stop_loss_price):
-            custom_dic_exit['Stop Loss'] = self.stop_loss_price
+            custom_dic_exit['Trading signal long'] = 'sell - Stop loss'
             self.close_position(custom_dic_exit, stock_obj, date_obj, self.stop_loss_price)
-            trade_closed = True
+            stop_loss_trigger = True
         if (self.position_type == 'short') and (price >= self.stop_loss_price):
-            custom_dic_exit['Stop Loss'] = self.stop_loss_price
+            custom_dic_exit['Trading signal short'] = 'sell - Stop loss'
             self.close_position(custom_dic_exit, stock_obj, date_obj, self.stop_loss_price)
-            trade_closed = True
-        return trade_closed
+            stop_loss_trigger = True
+        return stop_loss_trigger
 
 
 class Positions_table(object):
@@ -359,12 +359,13 @@ class Positions_table(object):
         return None
 
     def check_stop_loss(self, custom_dic_exit, stock_obj, date_obj, price):
+        stop_loss_trigger = False
         for position in self.positions_list:
             if position.get_state() == 'open':
-                is_closed = position.check_stop_loss(custom_dic_exit, stock_obj, date_obj, price)
-                if is_closed:
+                stop_loss_trigger = position.check_stop_loss(custom_dic_exit, stock_obj, date_obj, price)
+                if stop_loss_trigger:
                     self.total_money_exit += position.get_money_exit()
-        return None
+        return stop_loss_trigger
 
     def close_opened_positions(self, custom_dic_exit, stock_obj_exit, position_type, date_obj_exit, price_exit):
         for position in self.positions_list:
@@ -385,6 +386,13 @@ class Positions_table(object):
         i = 0
         for position in self.positions_list:
             if position.get_state() == 'closed' or not Only_closed_positions:
+                i += 1
+        return i
+
+    def get_number_open_positions(self):
+        i = 0
+        for position in self.positions_list:
+            if position.get_state() == 'open':
                 i += 1
         return i
 
@@ -451,26 +459,37 @@ class Trading_Manager(object):
                     self.ot.create_order(custom_dic, stock_obj, 'short', 'sell', day, price)
 
         if (self.p_dic['Mode'] == 'Backtesting') or (self.p_dic['Mode'] == 'Optimization'):
+            stop_loss_trigger = False
             # Long
             k = stock_obj.get_name() + '-long'
-            if k not in self.pt_long.keys():
+            if k not in self.pt_long.keys() and custom_dic['Trading signal long']:
                 self.pt_long[k] = Positions_table(stock_obj, 'long')
-            self.pt_long[k].check_stop_loss(custom_dic, stock_obj, day, price)
-            if 'buy' in custom_dic['Trading signal long'].lower():
-                stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
-                self.pt_long[k].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+            if k in self.pt_long.keys():
+                n_open = self.pt_long[k].get_number_open_positions()
+                stop_loss_trigger = self.pt_long[k].check_stop_loss(custom_dic, stock_obj, day, price)
+            else:
+                n_open = 0
+            if 'buy' in custom_dic['Trading signal long'].lower() and not stop_loss_trigger:
+                if (self.p_dic['Only one open position'] and n_open < 1) or not self.p_dic['Only one open position']:
+                    stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
+                    self.pt_long[k].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
             if 'sell' in custom_dic['Trading signal long'].lower():
                 self.pt_long[k].close_opened_positions(custom_dic, stock_obj, 'long', date_obj_exit=day, price_exit=price)
 
             # Short
             k = stock_obj.get_name() + '-short'
             if not self.p_dic['Only long positions']:
-                if k not in self.pt_short.keys():
+                if k not in self.pt_short.keys() and custom_dic['Trading signal short']:
                     self.pt_short[k] = Positions_table(stock_obj, 'short')
-                self.pt_short[k].check_stop_loss(custom_dic, stock_obj, day, price)
-                if 'buy' in custom_dic['Trading signal short'].lower():
-                    stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
-                    self.pt_short[k].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+                if k in self.pt_short.keys():
+                    n_open = self.pt_short[k].get_number_open_positions()
+                    stop_loss_trigger = self.pt_short[k].check_stop_loss(custom_dic, stock_obj, day, price)
+                else:
+                    n_open = 0
+                if 'buy' in custom_dic['Trading signal short'].lower() and not stop_loss_trigger:
+                    if (self.p_dic['Only one open position'] and n_open < 1) or not self.p_dic['Only one open position']:
+                        stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
+                        self.pt_short[k].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
                 if 'sell' in custom_dic['Trading signal short'].lower():
                     self.pt_short[k].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
 

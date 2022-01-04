@@ -235,8 +235,7 @@ def main(p_dic):
                                 custom_dic = p_dic['Algorithm function'](p_dic, eq, curr_date)
 
                                 # Manage orders and positions
-                                if custom_dic:
-                                    mngr.manage_orders_positions(custom_dic, eq, curr_date)
+                                mngr.manage_orders_positions(custom_dic, eq, curr_date)
 
                                 # Increment current date
                                 curr_date = eq.get_next_day(curr_date)
