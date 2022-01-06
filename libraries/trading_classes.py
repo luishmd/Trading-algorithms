@@ -472,7 +472,8 @@ class Trading_Manager(object):
             if 'buy' in custom_dic['Trading signal long'].lower() and not stop_loss_trigger:
                 if (self.p_dic['Only one open position'] and n_open < 1) or not self.p_dic['Only one open position']:
                     stop_loss = price * (1.0 - self.p_dic['Max losses pct'] / 100.0)
-                    self.pt_long[k].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+                    comission_per_op = self.p_dic['Commission per trade']
+                    self.pt_long[k].create_position(custom_dic, stock_obj, 'long', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss, comission_per_op=comission_per_op)
             if 'sell' in custom_dic['Trading signal long'].lower():
                 self.pt_long[k].close_opened_positions(custom_dic, stock_obj, 'long', date_obj_exit=day, price_exit=price)
 
@@ -489,7 +490,8 @@ class Trading_Manager(object):
                 if 'buy' in custom_dic['Trading signal short'].lower() and not stop_loss_trigger:
                     if (self.p_dic['Only one open position'] and n_open < 1) or not self.p_dic['Only one open position']:
                         stop_loss = price * (1.0 + self.p_dic['Max losses pct'] / 100.0)
-                        self.pt_short[k].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss)
+                        comission_per_op = self.p_dic['Commission per trade']
+                        self.pt_short[k].create_position(custom_dic, stock_obj, 'short', self.value_typical_trade, entry_date_obj=day, entry_price=price, stop_loss_price=stop_loss, comission_per_op=comission_per_op)
                 if 'sell' in custom_dic['Trading signal short'].lower():
                     self.pt_short[k].close_opened_positions(custom_dic, stock_obj, 'short', date_obj_exit=day, price_exit=price)
 
