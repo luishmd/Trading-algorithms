@@ -15,6 +15,8 @@ import talib
 import pandas as pd
 import lib_trading_print_results as lib_write
 import lib_excel_ops_openpyxl as lib_excel
+from pso_classes import Particle
+import copy
 
 #----------------------------------------------------------------------------------------
 # CLASSES
@@ -534,3 +536,93 @@ class Trading_Manager(object):
                 lib_excel.save_workbook(wb, output_file)
             # Close necessary files
             wb.close()
+
+
+#Swarm
+class Swarm(object):
+    """ Creates a swarm, which is a collection of particles with extra functionality """
+    def __init__(self, seed=None):
+        self.size = 0
+        self.particle_list = []
+        self.N_evals = 0
+        self.N_failed_evals = 0
+        self.seed = seed
+        self.best_particle_so_far = None
+        self.best_particle_current = None
+
+    def __str__(self):
+        s = "Size: {}\nSeed: {}\n".format(self.size, self.seed)
+        for i in self.particle_list:
+            s += i.__str__() + "\n"
+        return s
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def get_seed(self):
+        return self.seed
+
+    def get_size(self):
+        return self.size
+
+    def get_particle(self, p_id):
+        """
+        Function that returns a single particle with a given id
+        """
+        return self.particle_list[p_id]
+
+    def get_particles(self):
+        """
+        Function that returns all the particles in the swarm
+        """
+        return self.particle_list
+
+    def get_best_particle_so_far(self):
+        """
+        Function that returns the best particle ever found by the swarm, which is not necessarly contained in the swarm at any given iteration.
+        """
+        return self.best_particle_so_far
+
+    def get_best_particle_current(self):
+        """
+        Function that returns the best particle currently in the swarm.
+        """
+        return self.best_particle_current
+
+    def initialise(self, swarm_size, f_bound, seed=None):
+        """
+        Function that initialises a swarm of a given size
+        """
+        return 0
+
+    def update_position(self, seed=None):
+        """
+        Function that updates the position based on a previous position and the current velocity.
+        """
+        pass
+
+
+    def update_velocity(self, c_inertia, c_local, c_global, seed=None):
+        """
+        Function that updates the velocity according to the PSO rules
+        """
+        pass
+
+    def sorted_by_particle_fitness(self, reverse=False):
+        """
+        Function that sorts a swarm by fitness, depending on the optimisation type (min in ascending order).
+        return: a sorted list of particles
+        """
+        pass
+
+    def insert_particle(self, f_bound, position, velocity, seed=None):
+        """
+        Function that inserts a particle in the swarm, given a position and velocity.
+        """
+        pass
+
+    def evaluate(self, opt_type, synchronous=True):
+        """
+        Function that evaluates a swarm.
+        """
+        pass

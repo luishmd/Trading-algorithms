@@ -1,7 +1,7 @@
 # For a description of each parameter and their units of measurement, please check the README.md.
 
 exec_params:
-    Mode: Backtesting
+    Mode: Optimization
     Run algorithm: True
     Output file mode: Multiple files
     Output template: output_template.xlsx
@@ -10,7 +10,7 @@ exec_params:
     Start date: 2018-01-01
     End date:
     Last N days:
-    Algorithm name: algorithm_MACD
+    Algorithm name: alg_SMA_confirmed_by_MACD
     Only long positions: True
 
 filter_params:
@@ -25,8 +25,29 @@ backtesting_params:
     Typical trade value: 10000
     Commission per trade: 7.5
     Only one open position: True
-    
-algorithm_1_params:
+
+Decision_variables:
+    SMA slow period: {'LBound':'SMA slow period', 'UBound':300, 'Type': 'int', 'Active':True}
+    SMA fast period: {'LBound':1, 'UBound':'SMA fast period', 'Type': 'int', 'Active':True}
+    MACD slow period: {'LBound':'MACD fast period', 'UBound':50, 'Type': 'int', 'Active':True}
+    MACD fast period: {'LBound':1, 'UBound':'MACD slow period', 'Type': 'int', 'Active':True}
+    MACD signal period: {'LBound':1, 'UBound':'MACD fast period', 'Type': 'int', 'Active':True}
+
+Optimization:
+    opt_type: max
+    seed: 200
+    synchronous: True
+    swarm_size: 10
+    max_iterations: 10
+    enforce_bounds: True
+    enforce_bounds_function: reset_to_bounds
+    inertia_weight: 0.6
+    acceleration_constant_local: 1.7
+    acceleration_constant_global: 1.7
+    output_template: output_template.xlsx
+    write_to_console: True
+
+alg_Trend_SMA_Non_Trend_STOCH_params:
     Apply filters: True
     Filters list: [dataset_size, dataset_old, turnover, price]
     ADX period: 14
@@ -40,20 +61,20 @@ algorithm_1_params:
     MT trend TA indicator: SMA
     MT trend TA indicator period: 50
 
-algorithm_SMA_params:
+alg_SMA_params:
     Apply filters: True
     Filters list: [dataset_size, dataset_old, turnover, price]
     SMA fast period: 5
     SMA slow period: 20
 
-algorithm_MACD_params:
+alg_MACD_params:
     Apply filters: True
     Filters list: [dataset_size, dataset_old, turnover, price]
     MACD fast period: 12
     MACD slow period: 26
     MACD signal period: 9
 
-algorithm_SMA_MACD_params:
+alg_SMA_confirmed_by_MACD_params:
     Apply filters: True
     Filters list: [dataset_size, dataset_old, turnover, price]
     SMA fast period: 5

@@ -24,7 +24,7 @@ import lib_general_ops
 #----------------------------------------------------------------------------------------
 # ALGORITHMS
 #----------------------------------------------------------------------------------------
-def algorithm_1(p_dic, eq, day):
+def alg_Trend_SMA_Non_Trend_STOCH(p_dic, eq, day):
     # Get technical indicators
     ti_df = eq.get_technical_indicators()
     s_ADX = "ADX_{}".format(p_dic["ADX period"])
@@ -127,7 +127,7 @@ def algorithm_1(p_dic, eq, day):
     return custom_dic
 
 
-def algorithm_SMA(p_dic, eq, day):
+def alg_SMA(p_dic, eq, day):
     # Get technical indicators
     ti_df = eq.get_technical_indicators()
     p_fast = p_dic["SMA fast period"]
@@ -167,7 +167,7 @@ def algorithm_SMA(p_dic, eq, day):
     return custom_dic
 
 
-def algorithm_MACD(p_dic, eq, day):
+def alg_MACD(p_dic, eq, day):
     # Get technical indicators
     ti_df = eq.get_technical_indicators()
     p_fast = p_dic["MACD fast period"]
@@ -208,7 +208,7 @@ def algorithm_MACD(p_dic, eq, day):
     return custom_dic
 
 
-def algorithm_SMA_MACD(p_dic, eq, day):
+def alg_SMA_confirmed_by_MACD(p_dic, eq, day):
     # Get technical indicators
     ti_df = eq.get_technical_indicators()
     p_fast = p_dic["SMA fast period"]
