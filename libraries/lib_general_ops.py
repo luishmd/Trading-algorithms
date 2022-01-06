@@ -143,13 +143,25 @@ def get_next_date(dataset, current_date_obj, n_days=1):
     return new_date
 
 
-
 def get_analysis_time_interval(dataset, date_format, start_date=None, end_date=None, last_n_points=None):
+    """
+    Function that returns the start and end dates of the analysis
+    :param dataset: current_date_obj
+    :param dataformat: string with the date format
+    :param start_date: start_date_obj:
+    :param end_date: end_date_obj:
+    :param last_n_points: last N points of the analysis
+    :return sdate, edate: date_obj
+    """
     try:
         [sdate, edate] = get_dataset_time_interval(dataset)
         if start_date != None:
+            while start_date not in dataset.index.to_list():
+                start_date += dt.timedelta(days=1)
             sdate = dt.datetime.strptime(str(start_date), date_format).date()
         if end_date != None:
+            while end_date not in dataset.index.to_list():
+                end_date -= dt.timedelta(days=1)
             edate = dt.datetime.strptime(str(end_date), date_format).date()
         if last_n_points != None:
             sdate = pd.to_datetime(dataset.tail(last_n_points).index).date[0]

@@ -46,7 +46,7 @@ def write_results_to_excel(params_dic, wb, mngr_table=None, write_params=True, w
     # Write results for execution/backtesting
     if write_table:
         write_data(params_dic, mngr_table, ws)
-    return 0
+    return ws
 
 def write_parameters(params_dic, ws_params):
     # Write parameters
@@ -115,6 +115,7 @@ def write_data(params_dic, mngr_table, ws):
 
     if params_dic['Mode'] == 'Backtesting':
         pl_cum = 0
+        pl_pct_cum = 0
         for k in mngr_table.keys():
             positions_list = mngr_table[k].get_positions_list()
             row_i = lib_excel.determine_first_empty_row(ws, row_start=8)
@@ -144,12 +145,12 @@ def write_data(params_dic, mngr_table, ws):
                 i = 0
                 c_dic = position.get_custom_entry()
                 for c in c_dic.keys():
-                    ws.cell(row=6, column=16+i, value='python')
+                    ws.cell(row=6, column=17+i, value='python')
                     k = c + ' entry'
-                    w = ws.cell(row=7, column=16+i, value=k)
+                    w = ws.cell(row=7, column=17+i, value=k)
                     w.font = ft
                     w.alignment = al
-                    w = ws.cell(row=row_i, column=16+i, value=c_dic[c])
+                    w = ws.cell(row=row_i, column=17+i, value=c_dic[c])
                     if lib_gen.is_number(c_dic[c]):
                         w.number_format = '0.0000'
                         w.alignment = Alignment(horizontal='right')
@@ -178,14 +179,18 @@ def write_data(params_dic, mngr_table, ws):
                     c = ws.cell(row=row_i, column=15, value=pl_cum)
                     c.number_format = '0.00'
                     c.alignment = Alignment(horizontal='right')
+                    pl_pct_cum += position.get_profit_losses_pct()
+                    c = ws.cell(row=row_i, column=16, value=pl_pct_cum)
+                    c.number_format = '0.00'
+                    c.alignment = Alignment(horizontal='right')
                     c_dic = position.get_custom_exit()
                     for c in c_dic.keys():
-                        ws.cell(row=6, column=16 + i, value='python')
+                        ws.cell(row=6, column=17 + i, value='python')
                         k = c + ' exit'
-                        w = ws.cell(row=7, column=16 + i, value=k)
+                        w = ws.cell(row=7, column=17 + i, value=k)
                         w.font = ft
                         w.alignment = al
-                        w = ws.cell(row=row_i, column=16 + i, value=c_dic[c])
+                        w = ws.cell(row=row_i, column=17 + i, value=c_dic[c])
                         if lib_gen.is_number(c_dic[c]):
                             w.number_format = '0.000000'
                             w.alignment = Alignment(horizontal='right')

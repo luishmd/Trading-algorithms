@@ -526,7 +526,8 @@ class Trading_Manager(object):
                     for k in self.pt_short.keys():
                         table[k] = self.pt_short[k]
             if table:
-                lib_write.write_results_to_excel(self.p_dic, wb, table, write_params=True, write_table=True)
+                ws = lib_write.write_results_to_excel(self.p_dic, wb, table, write_params=True, write_table=True)
+                wb.active = ws
                 output_file = self.p_dic['Excel output file']
                 lib_excel.save_workbook(wb, output_file)
             # Close necessary files

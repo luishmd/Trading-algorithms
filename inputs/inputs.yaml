@@ -5,9 +5,9 @@ exec_params:
     Run algorithm: True
     Output file mode: Multiple files
     Output template: output_template.xlsx
-    Equities list: ["BCP.LS", "EDP.LS"]
+    Equities list: ['BCP.LS']
     Equities DB connection parameters file: YFINANCE_DB_inputs.yaml
-    Start date: 2018-01-03
+    Start date: 2018-01-01
     End date:
     Last N days:
     Algorithm name: algorithm_MACD
